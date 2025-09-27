@@ -1,0 +1,12 @@
+:root{
+--bg:#0a0a0a; /* black-ish */
+--paper:#ffffff; /* white */
+--ink:#111111; /* near black text */
+--muted:#e6e6e6; /* subtle gray borders */
+--dull-yellow:#c2a800; /* dull/industrial yellow */
+--bright-green:#00e676; /* bright green */
+}
+html,body,#root{height:100%;}
+body{margin:0;background:var(--bg);}
+/* Utility – optional */
+.card-black{background:#111;color:#fff;border:1px solid #222;}
