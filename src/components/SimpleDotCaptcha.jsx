@@ -21,7 +21,7 @@ export default function SimpleDotCaptcha({ maxDots = 8, onPass, onFail, timeLimi
     // Canvas dimensions
     const canvasWidth = 400;
     const canvasHeight = 250;
-    const ballRadius = 12;
+    const ballRadius = 20;
 
     const correctSelected = useMemo(() => {
         return Array.from(selectedBalls).filter(ballId => {
@@ -37,8 +37,8 @@ export default function SimpleDotCaptcha({ maxDots = 8, onPass, onFail, timeLimi
             id: i + 1,
             x: Math.random() * (canvasWidth - ballRadius * 2) + ballRadius,
             y: Math.random() * (canvasHeight - ballRadius * 2) + ballRadius,
-            vx: (Math.random() - 0.5) * 4, // Random velocity between -2 and 2
-            vy: (Math.random() - 0.5) * 4,
+            vx: (Math.random() - 0.5) * 2, // Random velocity between -2 and 2
+            vy: (Math.random() - 0.5) * 2,
             color: colors[Math.floor(Math.random() * colors.length)],
             radius: ballRadius,
             selected: false

@@ -12,6 +12,8 @@ import {
   Chip,
   Stack,
   Pagination,
+  CircularProgress,
+  Button
 } from '@mui/material';
 import { 
   Close,
@@ -25,10 +27,13 @@ import {
   Info
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import api from '../api/client';
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const itemsPerPage = 5; // Smaller page size for better UX
@@ -136,10 +141,49 @@ const Notifications = () => {
     }
   };
 
+  // Function to fetch notifications
+  const fetchNotifications = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Get current user data from localStorage
+      const userData = JSON.parse(localStorage.getItem("userdata") || '{"username":"user_123"}');
+      const username = userData.username || 'user_123';
+      
+      // Fetch all notifications and filter by username
+      const response = await fetch('http://localhost:3001/notifications');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const allNotifications = await response.json();
+      
+      // Filter notifications for current user
+      const userNotifications = allNotifications.filter(
+        notification => notification.username === username
+      );
+      
+      // Sort by created date (newest first)
+      userNotifications.sort((a, b) => new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at));
+      
+      setNotifications(userNotifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      setError(error.message);
+      
+      // Fallback to mock data if API fails
+      const mockData = generateMockNotifications();
+      setNotifications(mockData);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Initialize notifications
   useEffect(() => {
-    const mockData = generateMockNotifications();
-    setNotifications(mockData);
+    fetchNotifications();
   }, []);
 
   // Handle dismiss notification
@@ -213,7 +257,35 @@ const Notifications = () => {
 
   return (
     <Box>
-      {notifications.length > 0 ? (
+      {loading ? (
+        <Box sx={{ textAlign: 'center', py: 3 }}>
+          <CircularProgress size={24} sx={{ color: '#ffd700', mb: 1 }} />
+          <Typography variant="body2" sx={{ color: '#b0b0b0' }}>
+            Loading notifications...
+          </Typography>
+        </Box>
+      ) : error ? (
+        <Box sx={{ textAlign: 'center', py: 2 }}>
+          <Typography variant="body2" sx={{ color: '#f44336', mb: 1 }}>
+            Failed to load notifications
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#b0b0b0', mb: 2, display: 'block' }}>
+            {error}
+          </Typography>
+          <Button 
+            size="small" 
+            onClick={fetchNotifications}
+            sx={{ 
+              color: '#ffd700', 
+              borderColor: '#ffd700',
+              '&:hover': { backgroundColor: 'rgba(255, 215, 0, 0.1)' }
+            }}
+            variant="outlined"
+          >
+            Retry
+          </Button>
+        </Box>
+      ) : notifications.length > 0 ? (
         <Stack spacing={2}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography variant="body2" sx={{ color: '#b0b0b0' }}>

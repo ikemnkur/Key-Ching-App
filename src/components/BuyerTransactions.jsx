@@ -306,12 +306,84 @@ const BuyerTransactions = () => {
     const loadTransactions = async () => {
       try {
         // Simulate API call with mock data
-        setTimeout(() => {
-          const mockData = generateBuyerMockData();
-          setTransactions(mockData);
-          setFilteredTransactions(mockData);
-          setLoading(false);
-        }, 1000);
+        // setTimeout(() => {
+        //   const mockData = generateBuyerMockData();
+        //   setTransactions(mockData);
+        //   setFilteredTransactions(mockData);
+        //   setLoading(false);
+        // }, 1000);
+
+        // Real API call
+        // Get current user from localStorage
+        const userData = JSON.parse(localStorage.getItem("userdata") || '{"username":"seller_123"}');
+        const username = userData.username || 'seller_123';
+        
+        // Fetch data from JSON server
+        // Get unlocks and credit purchases for the buyer
+        const unlocksResponse = await fetch(`http://localhost:3001/unlocks`);
+        const creditsResponse = await fetch(`http://localhost:3001/buyCredits`);
+
+        if (!unlocksResponse.ok) {
+          throw new Error(`HTTP error! status: ${unlocksResponse.status}`);
+        }
+        if (!creditsResponse.ok) {
+          throw new Error(`HTTP error! status: ${creditsResponse.status}`);
+        }
+
+        // Get all data and filter for current user
+        const allUnlocks = await unlocksResponse.json();
+        const allCreditPurchases = await creditsResponse.json();
+
+        // Filter for current user's transactions
+        const userUnlocks = allUnlocks.filter(unlock => unlock.username === username);
+        const userCredits = allCreditPurchases.filter(credit => credit.username === username);
+
+        // Combine both datasets for processing
+        const combinedData = [...userUnlocks, ...userCredits];
+        console.log('Fetched combined transaction data:', combinedData);
+
+        // Sort by date descending by default
+        combinedData.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        // Transform unlocks to transaction format
+        const unlocksTransactions = userUnlocks.map(unlock => ({
+          id: `unlock_${unlock.id}`,
+          transaction_type: 'Key Purchase',
+          credits: unlock.price,
+          amount_usd: (unlock.price * 0.01).toFixed(2), // Assuming 1 credit = $0.01
+          key_title: unlock.keyTitle,
+          buyer_username: unlock.username,
+          status: unlock.status,
+          created_at: new Date(unlock.date).toISOString(),
+          message: `Key Purchase: ${unlock.keyTitle}`,
+          payout_method: null,
+          commission_rate: null
+        }));
+
+        // Transform credit purchases to transaction format  
+        const creditTransactions = userCredits.map(credit => ({
+          id: `credit_${credit.id}`,
+          transaction_type: 'Credit Purchase',
+          credits: credit.credits,
+          amount_usd: credit.amount.toFixed(4), // Keep original amount precision
+          key_title: null,
+          buyer_username: credit.username,
+          status: credit.status,
+          created_at: new Date(credit.date).toISOString(),
+          message: `Credit Purchase: ${credit.credits} credits via ${credit.currency}`,
+          payout_method: credit.currency,
+          commission_rate: null
+        }));
+
+        // Combine all transactions
+        const allTransactions = [...unlocksTransactions, ...creditTransactions];
+        
+        // Sort by date descending
+        allTransactions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        setTransactions(allTransactions);
+        setFilteredTransactions(allTransactions);
+      
       } catch (err) {
         console.error('Failed to fetch transaction history:', err);
         setError('Failed to load transaction history. Please try again later.');

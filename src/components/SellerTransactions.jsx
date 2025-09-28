@@ -27,7 +27,7 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import { Download as DownloadIcon, Search as SearchIcon } from '@mui/icons-material';
+import { Download as DownloadIcon, Search as SearchIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 
 const SellerTransactions = () => {
   const theme = useTheme();
@@ -106,13 +106,48 @@ const SellerTransactions = () => {
     const loadTransactions = async () => {
       try {
         setLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Get current user from localStorage
+        const userData = JSON.parse(localStorage.getItem("userdata") || '{"username":"seller_123"}');
+        const username = userData.username || 'seller_123';
+        
+        // Fetch earnings data from JSON server
+        const response = await fetch('http://localhost:3001/earnings');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const allEarnings = await response.json();
+        
+        // Filter earnings for current seller
+        const userEarnings = allEarnings.filter(earning => 
+          earning.username === username
+        );
+        
+        // Transform earnings data to match transaction format
+        const transformedTransactions = userEarnings.map(earning => ({
+          id: earning.id,
+          transaction_type: earning.transactionType,
+          credits: Math.abs(earning.amount), // Convert to positive for display
+          amount_usd: earning.amount.toFixed(2),
+          key_title: earning.keyTitle,
+          buyer_username: earning.buyer,
+          status: earning.status,
+          created_at: new Date(earning.date).toISOString(),
+          message: `${earning.transactionType}: ${earning.keyTitle || 'N/A'}${earning.buyer ? ` to ${earning.buyer}` : ''}`,
+          payout_method: earning.transactionType === 'Earnings Payout' ? 'Bank Transfer' : null,
+          commission_rate: earning.transactionType === 'Platform Fee' ? '10%' : null
+        }));
+        
+        setTransactions(transformedTransactions);
+      } catch (err) {
+        console.error('Error loading seller transactions:', err);
+        setError('Failed to load seller transactions');
+        
+        // Fallback to mock data if API fails
         const mockData = generateMockSellerTransactions();
         setTransactions(mockData);
-      } catch (err) {
-        setError('Failed to load seller transactions');
-        console.error('Transaction loading error:', err);
       } finally {
         setLoading(false);
       }
@@ -120,6 +155,54 @@ const SellerTransactions = () => {
 
     loadTransactions();
   }, []);
+
+  // Refresh function to reload transactions
+  const refreshTransactions = async () => {
+    setError(null);
+    try {
+      setLoading(true);
+      
+      // Get current user from localStorage
+      const userData = JSON.parse(localStorage.getItem("userdata") || '{"username":"seller_123"}');
+      const username = userData.username || 'seller_123';
+      
+      // Fetch earnings data from JSON server
+      const response = await fetch('http://localhost:3001/earnings');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const allEarnings = await response.json();
+      
+      // Filter earnings for current seller
+      const userEarnings = allEarnings.filter(earning => 
+        earning.username === username
+      );
+      
+      // Transform earnings data to match transaction format
+      const transformedTransactions = userEarnings.map(earning => ({
+        id: earning.id,
+        transaction_type: earning.transactionType,
+        credits: Math.abs(earning.amount),
+        amount_usd: earning.amount.toFixed(2),
+        key_title: earning.keyTitle,
+        buyer_username: earning.buyer,
+        status: earning.status,
+        created_at: new Date(earning.date).toISOString(),
+        message: `${earning.transactionType}: ${earning.keyTitle || 'N/A'}${earning.buyer ? ` to ${earning.buyer}` : ''}`,
+        payout_method: earning.transactionType === 'Earnings Payout' ? 'Bank Transfer' : null,
+        commission_rate: earning.transactionType === 'Platform Fee' ? '10%' : null
+      }));
+      
+      setTransactions(transformedTransactions);
+    } catch (err) {
+      console.error('Error refreshing seller transactions:', err);
+      setError('Failed to refresh seller transactions');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredTransactions = transactions.filter((t) => {
     const searchLower = searchTerm.toLowerCase();
@@ -352,9 +435,29 @@ const SellerTransactions = () => {
             </Box>
           </Grid>
 
-          {/* Right side: Export button */}
+          {/* Right side: Refresh and Export buttons */}
           <Grid item xs={12} md={4}>
-            <Box sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' } }}>
+            <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'center', md: 'flex-end' } }}>
+              <Button
+                startIcon={<RefreshIcon />}
+                onClick={refreshTransactions}
+                variant="outlined"
+                disabled={loading}
+                sx={{
+                  borderColor: '#4caf50',
+                  color: '#4caf50',
+                  '&:hover': {
+                    borderColor: '#4caf50',
+                    backgroundColor: 'rgba(76, 175, 80, 0.1)'
+                  },
+                  '&:disabled': {
+                    borderColor: '#666',
+                    color: '#666'
+                  }
+                }}
+              >
+                Refresh
+              </Button>
               <Button
                 startIcon={<DownloadIcon />}
                 onClick={exportToCSV}
@@ -441,7 +544,27 @@ const SellerTransactions = () => {
             {error && (
               <TableRow>
                 <TableCell colSpan={5} align="center" sx={{ color: '#f44336', py: 4 }}>
-                  {error}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    <Typography variant="body1" color="error">
+                      {error}
+                    </Typography>
+                    <Button 
+                      onClick={refreshTransactions}
+                      variant="outlined"
+                      size="small"
+                      disabled={loading}
+                      sx={{
+                        borderColor: '#f44336',
+                        color: '#f44336',
+                        '&:hover': {
+                          borderColor: '#f44336',
+                          backgroundColor: 'rgba(244, 67, 54, 0.1)'
+                        }
+                      }}
+                    >
+                      Retry
+                    </Button>
+                  </Box>
                 </TableCell>
               </TableRow>
             )}

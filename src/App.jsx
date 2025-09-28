@@ -13,7 +13,7 @@ import Auth from './components/Auth';
 import HelpPage from './pages/HelpPage';
 import Main from './pages/Main';
 import PurchaseHistory from './pages/PurchaseHistory';
-// import Redeem  from './pages/Redeem';
+import Redeem from './pages/Redeem';
 // import { fetchUserProfile } from './api/client';
 import { useNavigate } from 'react-router-dom';
 // import YourKeys from './pages/YourKeys';
@@ -68,39 +68,43 @@ export default function App() {
           <NavBar />
           <Routes>
             {/* Public Routes */}
-            {!isLoggedIn && (
-            <Route path="/login" element={<Auth isLogin={true} />} />
+            {/* {!isLoggedIn && ( */}
+              <Route path="/login" element={<Auth isLogin={true} />} />
 
-            )}
+            {/* )} */}
             <Route path="/register" element={<Auth isLogin={false} />} />
             <Route path="/help" element={<HelpPage />} />
 
-            {/* Host Routes */}
+            {/* Seller/ Buyer Routes */}
             {/* {accountType === 'buyer' && ( */}
-              <>
-                <Route path="/unlock/:id" element={<Unlock />} />
-                <Route path="/wallet" element={<Wallet />} />
-                <Route path="/purchase" element={<Purchase />} />
-                <Route path="/your-keys" element={<YourKeys />} />
-                <Route path="/" element={<Main />} />
-                <Route path="/purchase-history" element={<PurchaseHistory />} />
-              </>
+            <>
+              <Route path="/unlock/:id" element={<Unlock />} />
+              <Route path="/wallet" element={<Wallet />} />
+              <Route path="/purchase" element={<Purchase />} />
+              <Route path="/your-keys" element={<YourKeys />} />
+              <Route path="/purchase-history" element={<PurchaseHistory />} />
+            </>
             {/* )} */}
             {/* {accountType === 'seller' && ( */}
-              <>
-                <Route path="/earnings" element={<Earnings />} />
-                <Route path="/upload" element={<CreateKey />} />
-                <Route path="/" element={<YourKeys />} />
-
-                {/* <Route path="/redeem" element={<Redeem />} /> */}
-              </>
+            <>
+              <Route path="/earnings" element={<Earnings />} />
+              <Route path="/create-key" element={<CreateKey />} />
+              <Route path="/redeem" element={<Redeem />} />
+            </>
             {/* )}/ */}
-            {/* {!accountType && ( */}
+
+            {/* Main Route */}
+            {/* not logged in */}
+            {!accountType && (
               <>
-                {/* <Route path="/" element={<Info />} /> */}
+                <Route path="/" element={<Info />} />
               </>
-            {/* )} */}
-            {/* Client Routes */}
+            )} 
+            {/* logged in */}
+            {accountType && (
+              <Route path="/" element={<Main />} />
+            )}
+            
 
 
           </Routes>

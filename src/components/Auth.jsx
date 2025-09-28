@@ -37,10 +37,79 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
   const [blockTime, setBlockTime] = useState(null);
   const [remainingTime, setRemainingTime] = useState(null);
   const [showCaptcha, setShowCaptcha] = useState(false);
-  const [accountType, setAccountType] = useState('donor'); // New state for account type
+  const [accountType, setAccountType] = useState('buyer'); // New state for account type
 
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:5000';
+
+  const [userData, setUserData] = useState({
+    "id": 1,
+    "loginStatus": true,
+    "lastLogin": "2025-09-28T10:30:00.000Z",
+    "accountType": "buyer",
+    "username": "user_123",
+    "email": "john.buyer@example.com",
+    "firstName": "John",
+    "lastName": "Smith",
+    "phoneNumber": "+1-555-0123",
+    "birthDate": "1990-05-15",
+    "encryptionKey": "enc_key_abc123",
+    "credits": 750,
+    "reportCount": 1,
+    "isBanned": false,
+    "banReason": "",
+    "banDate": null,
+    "banDuration": null,
+    "createdAt": 1693497600000,
+    "updatedAt": 1727517000000,
+    "passwordHash": "$2b$10$hashedpassword123",
+    "twoFactorEnabled": false,
+    "twoFactorSecret": "",
+    "recoveryCodes": [],
+    "profilePicture": "https://i.pravatar.cc/150?img=1",
+    "bio": "Gaming enthusiast and software collector",
+    "socialLinks": {
+      "facebook": "",
+      "twitter": "@johnsmith",
+      "instagram": "",
+      "linkedin": "",
+      "website": ""
+    }
+  });
+
+  // Load user profile from server
+  const loadUserProfile = async () => {
+    try {
+      const userdata = localStorage.getItem('userdata');
+      if (!userdata) {
+        throw new Error('No user data found');
+      }
+      
+      const userData = JSON.parse(userdata);
+      
+      // Fetch latest user data from JSON server
+      const response = await fetch(`http://localhost:3001/userData/${userData.id}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch user profile');
+      }
+      
+      const profile = await response.json();
+      const updatedUserData = {
+        ...profile,
+        birthDate: profile.birthDate ? profile.birthDate.split('T')[0] : '',
+      };
+      
+      setUserData(updatedUserData);
+      localStorage.setItem('userdata', JSON.stringify(updatedUserData));
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      // If error fetching profile, user might need to login again
+      if (error.message.includes('No user data found')) {
+        navigate('/login');
+      }
+    }
+  };
 
   // Function to check block status
   const checkBlockStatus = useCallback(() => {
@@ -94,61 +163,181 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
   // New useEffect to check if user is already logged in and validate the token
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      // Validate the token with the backend
-      axios
-        // .get(`${API_URL}/api/auth/validate-token`, {
-        .get(`${API_URL}/api/user/validate/${username}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then(() => {
-          // Token is valid, redirect to dashboard
-          navigate('/dashboard');
-        })
-        .catch(() => {
-          // Token is invalid or expired, remove it
+    const userdata = localStorage.getItem('userdata');
+    
+    if (token && userdata) {
+      try {
+        // Simple token validation - check if it's a demo token
+        if (token.startsWith('demo_token_')) {
+          const userData = JSON.parse(userdata);
+          console.log('Valid token found for user:', userData.username);
+          // Token is valid, redirect to main page
+          navigate('/wallet');
+        } else {
+          // Invalid token format, remove it
           localStorage.removeItem('token');
-          // localStorage.removeItem('userdata');
-          // Optionally, you can display a message or do nothing
-        });
+          localStorage.removeItem('userdata');
+          localStorage.removeItem('accountType');
+        }
+      } catch (error) {
+        // Error parsing user data, remove invalid data
+        localStorage.removeItem('token');
+        localStorage.removeItem('userdata');
+        localStorage.removeItem('accountType');
+      }
     }
-  }, [API_URL, navigate]);
+  }, [navigate]);
 
   // Handler for successful CAPTCHA
   const handleCaptchaSuccess = useCallback(async () => {
+    console.log('🎉 CAPTCHA completed successfully!');
     setCaptchaPassed(true);
     setCaptchaFailed(false);
 
     // Proceed to submit the authentication request after CAPTCHA is passed
     try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const payload = isLogin
-        ? { email, password }
-        : { username, email, password, name, country, city, birthday };
-
-      const link = `${API_URL}${endpoint}`;
-      console.log('link: ' + link);
-
-      const response = await axios.post(link, payload);
-
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('userdata', JSON.stringify(response.data.user));
-      // Optionally, clear failed CAPTCHA attempts on success
+      console.log('🚀 Starting authentication process...');
+      if (isLogin) {
+        console.log('📝 Processing login for email:', email);
+        // Login logic - fetch user data from JSON server
+        const response = await fetch('http://localhost:3001/userData');
+        const users = await response.json();
+        
+        // Find user by email (since JSON server doesn't have auth endpoints)
+        const user = users.find(u => u.email === email);
+        
+        if (!user) {
+          throw new Error('User not found');
+        }
+        
+        // Simple password check (in real app, this would be hashed)
+        if (password !== 'demo123') { // Demo password for all users
+          throw new Error('Invalid credentials');
+        }
+        
+        // Update user login status
+        const updateResponse = await fetch(`http://localhost:3001/userData/${user.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            loginStatus: true,
+            lastLogin: new Date().toISOString()
+          })
+        });
+        
+        if (!updateResponse.ok) {
+          console.warn('Failed to update login status');
+        }
+        
+        // Store user data and token
+        const token = `demo_token_${user.id}_${Date.now()}`;
+        localStorage.setItem('token', token);
+        localStorage.setItem('userdata', JSON.stringify(user));
+        localStorage.setItem('accountType', user.accountType);
+        
+        console.log('✅ Login successful for:', user.username);
+        
+      } else {
+        console.log('📝 Processing registration for username:', username);
+        // Registration logic - create new user
+        const newUser = {
+          loginStatus: true,
+          lastLogin: new Date().toISOString(),
+          accountType: accountType || 'buyer',
+          username: username,
+          email: email,
+          firstName: name.split(' ')[0] || name,
+          lastName: name.split(' ').slice(1).join(' ') || '',
+          phoneNumber: '',
+          birthDate: birthday,
+          encryptionKey: `enc_key_${Date.now()}`,
+          credits: 100, // Starting credits
+          reportCount: 0,
+          isBanned: false,
+          banReason: '',
+          banDate: null,
+          banDuration: null,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          passwordHash: '$2b$10$hashedpassword', // Demo hash
+          twoFactorEnabled: false,
+          twoFactorSecret: '',
+          recoveryCodes: [],
+          profilePicture: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70) + 1}`,
+          bio: '',
+          socialLinks: {
+            facebook: '',
+            twitter: '',
+            instagram: '',
+            linkedin: '',
+            website: ''
+          }
+        };
+        
+        // Create user in JSON server
+        const response = await fetch('http://localhost:3001/userData', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newUser)
+        });
+        
+        if (!response.ok) {
+          throw new Error('Registration failed');
+        }
+        
+        const createdUser = await response.json();
+        
+        // Create wallet entry for new user
+        const walletEntry = {
+          username: username,
+          balance: 100,
+          totalEarned: 0,
+          totalSpent: 0,
+          pendingCredits: 0,
+          lastUpdated: new Date().toISOString()
+        };
+        
+        await fetch('http://localhost:3001/wallet', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(walletEntry)
+        });
+        
+        // Store user data and token
+        const token = `demo_token_${createdUser.id}_${Date.now()}`;
+        localStorage.setItem('token', token);
+        localStorage.setItem('userdata', JSON.stringify(createdUser));
+        localStorage.setItem('accountType', createdUser.accountType);
+        
+        console.log('✅ Registration successful for:', createdUser.username);
+      }
+      
+      // Clear failed CAPTCHA attempts on success
       localStorage.removeItem('failedCaptcha');
 
+      console.log('🎯 Calling onLoginSuccess callback...');
       if (onLoginSuccess) {
         onLoginSuccess();
-      } else {
-        navigate('/dashboard');
       }
+      
+      // Always navigate to main page after successful auth
+      console.log('🧭 Navigating to /main page...');
+      navigate('/');
+      
     } catch (error) {
-      console.error('Auth error:', error.response?.data?.message || 'An error occurred');
-      alert(error.response?.data?.message || 'An error occurred during authentication.');
+      console.error('Auth error:', error.message || 'An error occurred');
+      alert(error.message || 'An error occurred during authentication.');
       // Reset CAPTCHA state to allow the user to try again
       setCaptchaPassed(false);
       setShowCaptcha(false);
     }
-  }, [API_URL, email, password, username, isLogin, navigate, onLoginSuccess]);
+  }, [email, password, username, name, birthday, accountType, isLogin, navigate, onLoginSuccess]);
 
   // Handler for failed CAPTCHA
   const handleCaptchaFailure = useCallback(() => {
@@ -262,7 +451,7 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
                   <div>
 
 
-                  Chose your account type:
+                    Chose your account type:
                     {/* <FormControl fullWidth margin="normal" style={{ background: '#161616' }}>
                       <InputLabel>Account Type</InputLabel>
                       <Select 
@@ -272,45 +461,45 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
                         required
                         
                       >
-                        <MenuItem style={{ background: '#161616' }} value="donor">Donor/Supporter</MenuItem>
-                        <MenuItem style={{ background: '#161616' }} value="admin">Creator/Receiver</MenuItem>
+                        <MenuItem style={{ background: '#161616' }} value="buyer">buyer/Supporter</MenuItem>
+                        <MenuItem style={{ background: '#161616' }} value="seller">Creator/Receiver</MenuItem>
                       </Select>
                     </FormControl> */}
                     <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, my: 2 }}>
-                        <Button
-                            variant={accountType === 'donor' ? 'contained' : 'outlined'}
-                            color={accountType === 'donor' ? 'primary' : 'inherit'}
-                            onClick={() => setAccountType('donor')}
-                            sx={{
-                                flex: 1,
-                                py: 2,
-                                borderRadius: 2,
-                                boxShadow: accountType === 'donor' ? 2 : 0,
-                                background: accountType === 'donor' ? '#1976d2' : '#161616',
-                                color: accountType === 'donor' ? '#fff' : '#ccc',
-                                fontWeight: 'bold',
-                                fontSize: '1rem'
-                            }}
-                        >
-                            Donor/Supporter
-                        </Button>
-                        <Button
-                            variant={accountType === 'admin' ? 'contained' : 'outlined'}
-                            color={accountType === 'admin' ? 'primary' : 'inherit'}
-                            onClick={() => setAccountType('admin')}
-                            sx={{
-                                flex: 1,
-                                py: 2,
-                                borderRadius: 2,
-                                boxShadow: accountType === 'admin' ? 2 : 0,
-                                background: accountType === 'admin' ? '#1976d2' : '#161616',
-                                color: accountType === 'admin' ? '#fff' : '#ccc',
-                                fontWeight: 'bold',
-                                fontSize: '1rem'
-                            }}
-                        >
-                            Creator/Receiver
-                        </Button>
+                      <Button
+                        variant={accountType === 'buyer' ? 'contained' : 'outlined'}
+                        color={accountType === 'buyer' ? 'primary' : 'inherit'}
+                        onClick={() => setAccountType('buyer')}
+                        sx={{
+                          flex: 1,
+                          py: 2,
+                          borderRadius: 2,
+                          boxShadow: accountType === 'buyer' ? 2 : 0,
+                          background: accountType === 'buyer' ? '#1976d2' : '#161616',
+                          color: accountType === 'buyer' ? '#fff' : '#ccc',
+                          fontWeight: 'bold',
+                          fontSize: '1rem'
+                        }}
+                      >
+                        Buyer
+                      </Button>
+                      <Button
+                        variant={accountType === 'seller' ? 'contained' : 'outlined'}
+                        color={accountType === 'seller' ? 'primary' : 'inherit'}
+                        onClick={() => setAccountType('seller')}
+                        sx={{
+                          flex: 1,
+                          py: 2,
+                          borderRadius: 2,
+                          boxShadow: accountType === 'seller' ? 2 : 0,
+                          background: accountType === 'seller' ? '#1976d2' : '#161616',
+                          color: accountType === 'seller' ? '#fff' : '#ccc',
+                          fontWeight: 'bold',
+                          fontSize: '1rem'
+                        }}
+                      >
+                        Vendor/Seller
+                      </Button>
                     </Box>
 
                     <TextField
@@ -438,8 +627,8 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
           {showCaptcha && !captchaPassed && (
             <Box sx={{ mt: 2 }}>
               <SimpleDotCaptcha
-                onSuccess={handleCaptchaSuccess}
-                onFailure={handleCaptchaFailure}
+                onPass={handleCaptchaSuccess}
+                onFail={handleCaptchaFailure}
               />
             </Box>
           )}

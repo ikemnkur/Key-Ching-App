@@ -11,8 +11,10 @@ export default function PurchaseHistory(){
 
   const load = async ()=>{
     try{
-      const { data } = await api.get('/wallet/balance');
-      setBalance(data?.balance ?? 0);
+      const { data } = await api.get('/wallet');
+      // Filter for current user's wallet data
+      const userWalletData = data.find(wallet => wallet.userId === 'user_123');
+      setBalance(userWalletData?.balance ?? 0);
     }catch(e){
       console.error(e);
       setBalance(100); // demo fallback

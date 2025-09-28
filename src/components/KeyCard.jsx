@@ -4,7 +4,7 @@ import { Card, CardContent, CardActions, Typography, Button, Chip, Stack } from 
 export default function KeyCard({ item, onUnlock }){
   const available = item.available ?? Math.max(0, (item.quantity ?? 0) - (item.sold ?? 0));
   return (
-    <Card variant={item.dark ? 'outlined' : 'elevated'} sx={{minWidth:280}}>
+    <Card variant={item.dark ? 'outlined' : 'elevated'} sx={{minWidth:280, borderRadius: 6, border: '5px solid rgba(76, 218, 0, 0.68)'}}>
       <CardContent>
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
           <Typography variant="h6" sx={{fontWeight:800}}>{item.title}</Typography>

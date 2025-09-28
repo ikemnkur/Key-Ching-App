@@ -15,6 +15,8 @@ export default function Redeem() {
     SOL: 'qaSpvAumg2L3LLZA8qznFtbrRKYMP1neTGqpNgtCPaU',
     ETH: '0x9a61f30347258A3D03228F363b07692F3CBb7f27',
     XMR: '44X8AgosuXFCuRmBoDRc66Vw1FeCaL6vRiKRqrmqXeJdeKAciYuyaJj7STZnHMg7x8icHJL6M1hzeAPqSh8NSC1GGC9bkCp',
+    USDT: '0xdAC17FF489d9C6dFf9e3f2A1aD7D4bE5f', // Example USDT address on Ethereum
+    XRP: 'YOUR_XRP_WALLET_ADDRESS_HERE' // Example XRP address
   };
 
   // Deposit wallet address mappings with blockchain info
@@ -24,6 +26,8 @@ export default function Redeem() {
     SOL: { address: 'qaSpvAumg2L3LLZA8qznFtbrRKYMP1neTGqpNgtCPaU', blockchain: 'solana' },
     ETH: { address: '0x9a61f30347258A3D03228F363b07692F3CBb7f27', blockchain: 'ethereum' },
     XMR: { address: '44X8AgosuXFCuRmBoDRc66Vw1FeCaL6vRiKRqrmqXeJdeKAciYuyaJj7STZnHMg7x8icHJL6M1hzeAPqSh8NSC1GGC9bkCp', blockchain: 'monero' },
+    USDT: { address: '0xdAC17FF489d9C6dFf9e3f2A1aD7D4bE5f', blockchain: 'ethereum' }, // Example USDT on Ethereum
+    XRP: { address: 'YOUR_XRP_WALLET_ADDRESS_HERE', blockchain: 'ripple' } // Example XRP address
   };
 
   // Currency ID mapping for CoinGecko API
@@ -32,7 +36,9 @@ export default function Redeem() {
     ETH: 'ethereum',
     LTC: 'litecoin',
     SOL: 'solana',
-    XMR: 'monero'
+    XMR: 'monero',
+    USDT: 'tether',
+    XRP: 'ripple'
   };
 
   const [balance, setBalance] = useState(null);
@@ -62,7 +68,8 @@ export default function Redeem() {
 
   // Calculate the amount in USD and crypto
   const dollarValueOfCoins = amount / 1000; // Assuming 1000 coins = $1
-  const cryptoAmount = rate ? (dollarValueOfCoins / rate).toFixed(8) : '0.00000000'; // Amount of crypto to send
+  const cryptoAmountRaw = rate ? (dollarValueOfCoins / rate) : 0; // Raw numeric amount
+  const cryptoAmount = cryptoAmountRaw.toFixed(8); // Formatted string amount for display
 
   const load = async () => {
     try {
@@ -343,7 +350,9 @@ export default function Redeem() {
       ETH: '5-15 minutes (12-35 confirmations)',
       LTC: '5-15 minutes (6 confirmations)',
       SOL: '1-3 minutes (32 confirmations)',
-      XMR: '20-40 minutes (10 confirmations)'
+      XMR: '20-40 minutes (10 confirmations)',
+      USDT: '5-15 minutes (12-35 confirmations)',
+      XRP: '3-5 minutes (1 confirmation)'
     };
     return waitTimes[currency] || '10-30 minutes';
   };
@@ -377,7 +386,16 @@ export default function Redeem() {
             ) : (
               <Typography variant="h3" sx={{ fontWeight: 800, color: 'primary.main' }}>{balance} credits</Typography>
             )}
+            
             <Divider sx={{ my: 2 }} />
+            <Typography variant="h5" gutterBottom>How It Works</Typography>
+            <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
+              Follow these simple steps to redeem your credits using cryptocurrency:
+            </Typography>
+
+            {/* <div style={styles.container}> */}
+
+          <Divider sx={{ my: 2 }} />
             <Typography variant="h4">Step 1</Typography>
             <Typography variant="h6">Choose Redeem Currency</Typography>
             <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>Select your preferred cryptocurrency to redeem credits.</Typography>
@@ -393,7 +411,9 @@ export default function Redeem() {
                 { code: 'ETH', name: 'Ethereum', icon: 'Ξ', color: '#627eea' },
                 { code: 'LTC', name: 'Litecoin', icon: 'Ł', color: '#345d9d' },
                 { code: 'SOL', name: 'Solana', icon: '◎', color: '#9945ff' },
-                { code: 'XMR', name: 'Monero', icon: 'ɱ', color: '#ff6600' }
+                { code: 'XMR', name: 'Monero', icon: 'ɱ', color: '#ff6600' },
+                { code: 'USDT', name: 'Tether', icon: '₮', color: '#26a17b' },
+                { code: 'XRP', name: 'XRP', icon: '✕', color: '#00aae4' }
               ].map((crypto) => (
                 <div
                   key={crypto.code}
@@ -468,11 +488,11 @@ export default function Redeem() {
               marginBottom: '20px'
             }}>
               {[
-                { amount: 100, label: '100 Credits' },
-                { amount: 500, label: '500 Credits' },
-                { amount: 1000, label: '1,000 Credits' },
-                { amount: 5000, label: '5,000 Credits' },
-                { amount: 10000, label: '10,000 Credits' }
+                { amount: 10000, label: '10,000 Credits' },
+                { amount: 25000, label: '25,000 Credits' },
+                { amount: 50000, label: '50,000 Credits' },
+                { amount: 75000, label: '75,000 Credits' },
+                { amount: 100000, label: '100,000 Credits' }
               ].map((option) => (
                 <button
                   key={option.amount}
@@ -493,7 +513,7 @@ export default function Redeem() {
               ))}
             </div>
             <Typography variant="body2" sx={{ opacity: 0.8 }}>
-              Don't see your desired amount? You can manually enter any amount between <strong>100</strong> and <strong>100,000</strong> credits below:
+              Don't see your desired amount? You can manually enter any amount between <strong>10,000</strong> and <strong>100,000</strong> credits below:
             </Typography>
             <input
               type="number"
@@ -502,8 +522,8 @@ export default function Redeem() {
               value={amount}
               onChange={(e) => {
                 let val = parseInt(e.target.value);
-                if (isNaN(val)) val = 100;
-                if (val < 100) val = 100;
+                if (isNaN(val)) val = 25000;
+                if (val < 10000) val = 10000;
                 if (val > 100000) val = 100000;
                 setAmount(val);
               }}
@@ -519,18 +539,17 @@ export default function Redeem() {
               }}
             />
           </CardContent>
-        </Card>
-
-        <Card variant="outlined">
+        
           <CardContent>
-            <Typography variant="h5" gutterBottom>How It Works</Typography>
+            {/* <Typography variant="h5" gutterBottom>How It Works</Typography>
             <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
               Follow these simple steps to redeem your credits using cryptocurrency:
             </Typography>
 
             <div style={styles.container}>
 
-          <Divider sx={{ my: 2 }} />
+          <Divider sx={{ my: 2 }} /> */}
+           <Divider sx={{ my: 2 }} />
           <Typography variant="h4" data-step="3">Step 3</Typography>
           <Typography variant="h6">Send Cryptocurrency</Typography>
 
@@ -574,11 +593,11 @@ export default function Redeem() {
                 </p>
                  */}
               <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
-                You should receive the exact amount ${(cryptoAmount || 0).toFixed(6)} (1% margin of error) of ${currency} from the wallet address below.
+                You should receive the exact amount {cryptoAmountRaw.toFixed(6)} (1% margin of error) of {currency} from the wallet address below.
               </Typography>
 
               <div style={styles.header}>
-                <h2>You are recieving: {parseInt(amount).toLocaleString()} Credits</h2>
+                <h2>You will be receiving: {parseInt(amount).toLocaleString()} Credits</h2>
                 <h3> Our Cut (Fee): {((parseInt(amount) * 0.1) || 0).toLocaleString()} Credits</h3>
                 <h3>Total: ${((parseInt(amount) / 1000) || 0).toFixed(2)} USD</h3>
               </div>
@@ -621,7 +640,7 @@ export default function Redeem() {
               </div>
             </div>
           </div>
-
+              <br></br>
           <Divider sx={{ my: 2 }} />
           <Typography variant="h4">Step 4</Typography>
           <Typography variant="h6">Log Details for your Redemption</Typography>
@@ -686,99 +705,7 @@ export default function Redeem() {
               </small>
             </div>
 
-            <div style={styles.formGroup}>
-              <label>Transaction ID/Hash:<span style={styles.required}>*</span></label>
-              <input
-                type="text"
-                name="transactionId"
-                value={userDetails.transactionId}
-                onChange={handleInputChange}
-                required
-                style={styles.input}
-                placeholder="Enter the transaction ID or hash"
-              />
-              <small style={{ color: '#cccccc', fontSize: '12px' }}>
-                The transaction ID/hash from your wallet or exchange
-              </small>
-            </div>
-
-            <div style={styles.formGroup}>
-              <label>Transaction Date (optional):</label>
-              <input
-                name="transactionDate"
-                type="date"
-                value={userDetails.transactionDate || ''}
-                onChange={handleInputChange}
-                style={styles.input}
-              />
-              <small style={{ color: '#cccccc', fontSize: '12px' }}>
-                Date when you sent the transaction
-              </small>
-            </div>
-
-            <div style={styles.formGroup}>
-              <label>Transaction Time (optional):</label>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <input
-                  type="text"
-                  name="time"
-                  value={userDetails.time}
-                  onChange={handleInputChange}
-                  style={{ ...styles.input, flex: 1 }}
-                  placeholder="e.g., 12:15 PM"
-                />
-                <button
-                  type="button"
-                  style={styles.time_button}
-                  onClick={() => {
-                    const currentTime = new Date();
-                    let hours = currentTime.getHours();
-                    const minutes = currentTime.getMinutes();
-                    const ampm = hours >= 12 ? 'PM' : 'AM';
-                    hours = hours % 12;
-                    hours = hours ? hours : 12;
-                    const strTime = hours + ':' + (minutes < 10 ? '0' + minutes : minutes) + ' ' + ampm;
-                    setUserDetails((prev) => ({ ...prev, time: strTime }));
-                  }}
-                >
-                  Current Time
-                </button>
-              </div>
-              <small style={{ color: '#cccccc', fontSize: '12px' }}>
-                Time when you sent the transaction (HH:MM AM/PM format)
-              </small>
-            </div>
-
-            <div style={styles.formGroup}>
-              <label>Block Explorer Link (optional):</label>
-              <input
-                type="url"
-                name="blockExplorerLink"
-                value={userDetails.blockExplorerLink}
-                onChange={handleInputChange}
-                style={styles.input}
-                placeholder="https://blockchair.com/bitcoin/transaction/..."
-              />
-              <small style={{ color: '#cccccc', fontSize: '12px' }}>
-                Link to view your transaction on a block explorer
-              </small>
-            </div>
-
-            <div style={styles.formGroup}>
-              <label>Transaction Key/Proof (optional):</label>
-              <input
-                type="text"
-                name="key"
-                value={userDetails.key}
-                onChange={handleInputChange}
-                style={styles.input}
-                placeholder="Enter transaction key if applicable (e.g., for Monero)"
-              />
-              <small style={{ color: '#cccccc', fontSize: '12px' }}>
-                Private transaction key for verification (if applicable)
-              </small>
-            </div>
-
+     
             {/* Order Logging Option */}
             {/* <div style={{ 
                 ...styles.formGroup, 
@@ -821,86 +748,7 @@ export default function Redeem() {
 
 
 
-            {/* // Replace the upload section in your JSX with this enhanced version: */}
-            <div style={styles.uploadSection}>
-              <label style={styles.uploadLabel}>
-                Payment Screenshot (Optional):
-              </label>
-
-              {/* Upload Button */}
-              <div style={styles.uploadButtonContainer}>
-                <input
-                  accept=".png,.jpg,.jpeg"
-                  style={{ display: 'none' }}
-                  id="transaction-screenshot-upload"
-                  type="file"
-                  onChange={handleScreenshotUpload}
-                />
-                <label htmlFor="transaction-screenshot-upload">
-                  <button
-                    type="button"
-                    style={styles.uploadButton}
-                    onClick={() => document.getElementById('transaction-screenshot-upload').click()}
-                  >
-                    <PhotoCamera style={{ marginRight: '8px', fontSize: '20px' }} />
-                    {uploadedFile ? 'Change Screenshot' : 'Upload Screenshot'}
-                  </button>
-                </label>
-              </div>
-
-              {/* Error Message */}
-              {fileError && (
-                <div style={styles.fileError}>
-                  <span>⚠️</span> {fileError}
-                </div>
-              )}
-
-              {/* File Preview and Info */}
-              {uploadedFile && (
-                <div style={styles.filePreviewContainer}>
-                  {/* Preview Image */}
-                  <div style={styles.previewSection}>
-                    <img
-                      src={filePreview}
-                      alt="Payment screenshot preview"
-                      style={styles.previewImage}
-                    />
-                  </div>
-
-                  {/* File Info */}
-                  <div style={styles.fileInfoSection}>
-                    <div style={styles.fileInfo}>
-                      <div style={styles.fileName}>
-                        <span style={styles.fileIcon}>📎</span>
-                        <span>{uploadedFile.name}</span>
-                      </div>
-                      <div style={styles.fileSize}>
-                        {(uploadedFile.size / 1024).toFixed(1)} KB
-                      </div>
-                      <div style={styles.fileType}>
-                        {uploadedFile.type.split('/')[1].toUpperCase()}
-                      </div>
-                    </div>
-
-                    {/* Remove Button */}
-                    <button
-                      type="button"
-                      onClick={handleRemoveFile}
-                      style={styles.removeButton}
-                    >
-                      <span>🗑️</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Upload Instructions */}
-              <div style={styles.uploadInstructions}>
-                <small>
-                  📸 Upload a screenshot of your payment confirmation (PNG or JPG only, max 5MB)
-                </small>
-              </div>
-            </div>
+           
 
             <div style={styles.buttonGroup}>
               <button style={styles.log_button} type="submit">
@@ -952,11 +800,11 @@ export default function Redeem() {
               </div>
               
               <div style={{ fontSize: '14px', color: '#b0b0b0', lineHeight: '1.5' }}>
-                <p style={{ margin: '8px 0' }}>📋 <strong>Processing Schedule:</strong></p>
+                <p style={{ margin: '8px 0' }}>📋 <strong>Processing Schedule Times (Max):</strong></p>
                 <p style={{ margin: '5px 0', paddingLeft: '20px' }}>• Under 25,000 ₡: <span style={{ color: '#4caf50' }}>12 hours</span></p>
                 <p style={{ margin: '5px 0', paddingLeft: '20px' }}>• 25,000 - 49,999 ₡: <span style={{ color: '#ff9800' }}>24 hours</span></p>
-                <p style={{ margin: '5px 0', paddingLeft: '20px' }}>• 50,000 - 99,999 ₡: <span style={{ color: '#ff9800' }}>48 hours</span></p>
-                <p style={{ margin: '5px 0', paddingLeft: '20px' }}>• 100,000+ ₡: <span style={{ color: '#f44336' }}>72 hours</span></p>
+                <p style={{ margin: '5px 0', paddingLeft: '20px' }}>• 50,000 - 99,999 ₡: <span style={{ color: '#ff9800' }}>36 hours</span></p>
+                <p style={{ margin: '5px 0', paddingLeft: '20px' }}>• 100,000+ ₡: <span style={{ color: '#f44336' }}>48 - 72 hours</span></p>
               </div>
               
               <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#333', borderRadius: '6px' }}>
@@ -1090,7 +938,7 @@ export default function Redeem() {
             ) : (
               <>
                 <button
-                  onClick={() => window.location.reload()}
+                  // onClick={() => window.location.reload()}
                   style={{
                     ...styles.button,
                     backgroundColor: '#ff9800',
@@ -1098,7 +946,7 @@ export default function Redeem() {
                     padding: '12px 24px'
                   }}
                 >
-                  Refresh Page
+                  Complete Redemption
                 </button>
                 <button
                   onClick={() => navigate('/wallet')}
@@ -1113,7 +961,7 @@ export default function Redeem() {
               </>
             )}
           </div>
-          </div>
+          
 
           {/* PaymentButton for demo/alternative payment method */}
           {/* <PaymentButton amountUSD={10} onError={onPaymentError}>Add $10 in Credits</PaymentButton> */}
