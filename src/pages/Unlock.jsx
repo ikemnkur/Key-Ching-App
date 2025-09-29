@@ -58,7 +58,7 @@ export default function Unlock() {
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Use the actual JSON Server endpoint: /createdKeys/:id
-        const response = await fetch(`http://localhost:3001/createdKeys/${params.id}`);
+        const response = await fetch(`http://localhost:3001/api/createdKeys/${params.id}`);
         
         if (response.ok) {
           const data = await response.json();

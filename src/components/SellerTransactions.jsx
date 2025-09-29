@@ -112,7 +112,7 @@ const SellerTransactions = () => {
         const username = userData.username || 'seller_123';
         
         // Fetch earnings data from JSON server
-        const response = await fetch('http://localhost:3001/earnings');
+        const response = await fetch('http://localhost:3001/api/earnings');
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -167,7 +167,7 @@ const SellerTransactions = () => {
       const username = userData.username || 'seller_123';
       
       // Fetch earnings data from JSON server
-      const response = await fetch('http://localhost:3001/earnings');
+      const response = await fetch('http://localhost:3001/api/earnings');
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

@@ -84,22 +84,22 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
       if (!userdata) {
         throw new Error('No user data found');
       }
-      
+
       const userData = JSON.parse(userdata);
-      
+
       // Fetch latest user data from JSON server
-      const response = await fetch(`http://localhost:3001/userData/${userData.id}`);
-      
+      const response = await fetch(`http://localhost:3001/api/userData/${userData.id}`);
+
       if (!response.ok) {
         throw new Error('Failed to fetch user profile');
       }
-      
+
       const profile = await response.json();
       const updatedUserData = {
         ...profile,
         birthDate: profile.birthDate ? profile.birthDate.split('T')[0] : '',
       };
-      
+
       setUserData(updatedUserData);
       localStorage.setItem('userdata', JSON.stringify(updatedUserData));
     } catch (error) {
@@ -164,7 +164,7 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userdata = localStorage.getItem('userdata');
-    
+
     if (token && userdata) {
       try {
         // Simple token validation - check if it's a demo token
@@ -172,7 +172,7 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
           const userData = JSON.parse(userdata);
           console.log('Valid token found for user:', userData.username);
           // Token is valid, redirect to main page
-          navigate('/wallet');
+          navigate('/');
         } else {
           // Invalid token format, remove it
           localStorage.removeItem('token');
@@ -199,125 +199,85 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
       console.log('🚀 Starting authentication process...');
       if (isLogin) {
         console.log('📝 Processing login for email:', email);
-        // Login logic - fetch user data from JSON server
-        const response = await fetch('http://localhost:3001/userData');
-        const users = await response.json();
         
-        // Find user by email (since JSON server doesn't have auth endpoints)
-        const user = users.find(u => u.email === email);
-        
-        if (!user) {
-          throw new Error('User not found');
-        }
-        
-        // Simple password check (in real app, this would be hashed)
-        if (password !== 'demo123') { // Demo password for all users
-          throw new Error('Invalid credentials');
-        }
-        
-        // Update user login status
-        const updateResponse = await fetch(`http://localhost:3001/userData/${user.id}`, {
-          method: 'PATCH',
+        // Use the authentication endpoint we set up in the server
+        const loginResponse = await fetch('http://localhost:3001/api/auth/login', {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            loginStatus: true,
-            lastLogin: new Date().toISOString()
+          body: JSON.stringify({ 
+            username: email, // Using email as username for login
+            password: password 
           })
         });
-        
-        if (!updateResponse.ok) {
-          console.warn('Failed to update login status');
+
+        if (!loginResponse.ok) {
+          const errorData = await loginResponse.json();
+          throw new Error(errorData.message || 'Login failed');
         }
-        
-        // Store user data and token
-        const token = `demo_token_${user.id}_${Date.now()}`;
+
+        const loginData = await loginResponse.json();
+        console.log('✅ Login response from server:', loginData);
+
+        if (!loginData.success) {
+          throw new Error(loginData.message || 'Login failed');
+        }
+
+        // Store user data and token from server response
+        const { user, token } = loginData;
         localStorage.setItem('token', token);
         localStorage.setItem('userdata', JSON.stringify(user));
         localStorage.setItem('accountType', user.accountType);
-        
+        localStorage.setItem('unlockedKeys', JSON.stringify([])); // Initialize unlocked keys storage
+
         console.log('✅ Login successful for:', user.username);
-        
+
+        // Clear failed CAPTCHA attempts on success
+        localStorage.removeItem('failedCaptcha');
+
       } else {
         console.log('📝 Processing registration for username:', username);
-        // Registration logic - create new user
-        const newUser = {
-          loginStatus: true,
-          lastLogin: new Date().toISOString(),
-          accountType: accountType || 'buyer',
-          username: username,
-          email: email,
-          firstName: name.split(' ')[0] || name,
-          lastName: name.split(' ').slice(1).join(' ') || '',
-          phoneNumber: '',
-          birthDate: birthday,
-          encryptionKey: `enc_key_${Date.now()}`,
-          credits: 100, // Starting credits
-          reportCount: 0,
-          isBanned: false,
-          banReason: '',
-          banDate: null,
-          banDuration: null,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          passwordHash: '$2b$10$hashedpassword', // Demo hash
-          twoFactorEnabled: false,
-          twoFactorSecret: '',
-          recoveryCodes: [],
-          profilePicture: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70) + 1}`,
-          bio: '',
-          socialLinks: {
-            facebook: '',
-            twitter: '',
-            instagram: '',
-            linkedin: '',
-            website: ''
-          }
-        };
         
-        // Create user in JSON server
-        const response = await fetch('http://localhost:3001/userData', {
+        // Use the registration endpoint we set up in the server
+        const registerResponse = await fetch('http://localhost:3001/api/auth/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(newUser)
+          body: JSON.stringify({ 
+            username: username,
+            email: email,
+            password: password,
+            firstName: name.split(' ')[0] || name,
+            lastName: name.split(' ').slice(1).join(' ') || '',
+            accountType: accountType || 'buyer',
+            birthDate: birthday
+          })
         });
-        
-        if (!response.ok) {
-          throw new Error('Registration failed');
+
+        if (!registerResponse.ok) {
+          const errorData = await registerResponse.json();
+          throw new Error(errorData.message || 'Registration failed');
         }
-        
-        const createdUser = await response.json();
-        
-        // Create wallet entry for new user
-        const walletEntry = {
-          username: username,
-          balance: 100,
-          totalEarned: 0,
-          totalSpent: 0,
-          pendingCredits: 0,
-          lastUpdated: new Date().toISOString()
-        };
-        
-        await fetch('http://localhost:3001/wallet', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(walletEntry)
-        });
-        
-        // Store user data and token
-        const token = `demo_token_${createdUser.id}_${Date.now()}`;
+
+        const registerData = await registerResponse.json();
+        console.log('✅ Registration response from server:', registerData);
+
+        if (!registerData.success) {
+          throw new Error(registerData.message || 'Registration failed');
+        }
+
+        // Store user data and token from server response
+        const { user, token } = registerData;
         localStorage.setItem('token', token);
-        localStorage.setItem('userdata', JSON.stringify(createdUser));
-        localStorage.setItem('accountType', createdUser.accountType);
-        
-        console.log('✅ Registration successful for:', createdUser.username);
+        localStorage.setItem('userdata', JSON.stringify(user));
+        localStorage.setItem('accountType', user.accountType);
+        localStorage.setItem('unlockedKeys', JSON.stringify([])); // Initialize unlocked keys storage
+
+        console.log('✅ Registration successful for:', user.username);
       }
-      
+
       // Clear failed CAPTCHA attempts on success
       localStorage.removeItem('failedCaptcha');
 
@@ -325,11 +285,11 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
       if (onLoginSuccess) {
         onLoginSuccess();
       }
-      
+
       // Always navigate to main page after successful auth
       console.log('🧭 Navigating to /main page...');
       navigate('/');
-      
+
     } catch (error) {
       console.error('Auth error:', error.message || 'An error occurred');
       alert(error.message || 'An error occurred during authentication.');
@@ -435,9 +395,9 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
 
 
       <Card sx={{ maxWidth: 400, width: '100%', background: '#1f201aff' }} elevation={0}>
-        <Avatar sx={{ m: 1, margin: "10px auto", textAlign: 'center', bgcolor: 'secondary.main' }}>
+        {/* <Avatar sx={{ m: 1, margin: "10px auto", textAlign: 'center', bgcolor: 'secondary.main' }}>
           <LockOutlinedIcon />
-        </Avatar>
+        </Avatar> */}
         <CardHeader
           title={isLogin ? 'Login' : 'Sign Up'}
           sx={{ textAlign: 'center' }}

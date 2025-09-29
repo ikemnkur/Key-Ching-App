@@ -66,7 +66,7 @@ export default function Purchase() {
 
   const load = async () => {
     try {
-      const { data } = await api.get('/wallet/balance');
+      const { data } = await api.get('/api/wallet/balance');
       setBalance(data?.balance ?? 0);
     } catch (e) {
       console.error(e);

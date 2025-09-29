@@ -152,7 +152,7 @@ const Notifications = () => {
       const username = userData.username || 'user_123';
       
       // Fetch all notifications and filter by username
-      const response = await fetch('http://localhost:3001/notifications');
+      const response = await fetch('http://localhost:3001/api/notifications');
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

@@ -14,6 +14,7 @@ import HelpPage from './pages/HelpPage';
 import Main from './pages/Main';
 import PurchaseHistory from './pages/PurchaseHistory';
 import Redeem from './pages/Redeem';
+import Account from './pages/Account';
 // import { fetchUserProfile } from './api/client';
 import { useNavigate } from 'react-router-dom';
 // import YourKeys from './pages/YourKeys';
@@ -79,10 +80,11 @@ export default function App() {
             {/* {accountType === 'buyer' && ( */}
             <>
               <Route path="/unlock/:id" element={<Unlock />} />
-              <Route path="/wallet" element={<Wallet />} />
+              {/* <Route path="/wallet" element={<Wallet />} /> */}
               <Route path="/purchase" element={<Purchase />} />
               <Route path="/your-keys" element={<YourKeys />} />
               <Route path="/purchase-history" element={<PurchaseHistory />} />
+              <Route path="/account" element={<Account />} />
             </>
             {/* )} */}
             {/* {accountType === 'seller' && ( */}
@@ -95,13 +97,13 @@ export default function App() {
 
             {/* Main Route */}
             {/* not logged in */}
-            {!accountType && (
+            {!isLoggedIn && (
               <>
                 <Route path="/" element={<Info />} />
               </>
             )} 
             {/* logged in */}
-            {accountType && (
+            {isLoggedIn && (
               <Route path="/" element={<Main />} />
             )}
             

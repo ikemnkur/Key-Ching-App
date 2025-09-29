@@ -7,6 +7,14 @@ export default function NavBar() {
   const accountType = localStorage.getItem('accountType'); // 'donor', 'host', or null
   const loggedIn = !!accountType;
 
+  function handleLogout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userdata');
+    localStorage.removeItem('accountType');
+    localStorage.removeItem('unlockedKeys'); // Clear unlocked keys on logout
+    window.location.href = '/login'; // Redirect to login page
+  }
+
   return (
     <AppBar position="sticky" color="transparent" sx={{ backdropFilter: 'blur(6px)', borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
       <Toolbar sx={{ gap: 2 }}>
@@ -17,7 +25,8 @@ export default function NavBar() {
         <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 800, color: 'primary.main' }}>  <a href="/" style={{textDecoration: 'none'}}>🔑 Key-Ching 💰</a></Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
 
-          <Button component={RouterLink} to="/login" color={loggedIn ? "secondary" : "primary"} variant="outlined">{loggedIn ? "Logout" : "Login"}</Button>
+          {loggedIn && <Button component={RouterLink} to="/account" color="secondary" variant="outlined">Account</Button>}
+          <Button onClick={loggedIn ? handleLogout : null} color={loggedIn ? "secondary" : "primary"} variant="outlined">{loggedIn ? "Logout" : "Login"}</Button>
           {/* <Button component={RouterLink} to="/" color="secondary" variant="outlined">Main</Button> */}
           
          

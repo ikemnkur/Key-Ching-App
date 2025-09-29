@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview --port 5173"
+    "preview": "vite preview --port 5173",
+    "server": "node server.cjs",
+    "server-json": "json-server --watch db.json --port 3001",
+    "setup-mysql": "./setup-mysql.sh"
   },
   "dependencies": {
     "@emotion/react": "^11.13.3",
@@ -15,8 +18,12 @@
     "@mui/icons-material": "^6.1.6",
     "@mui/material": "^6.1.6",
     "axios": "^1.7.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
     "json-server": "^1.0.0-beta.3",
     "mui": "^0.0.1",
+    "mysql2": "^3.15.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^6.26.2"

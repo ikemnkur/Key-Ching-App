@@ -320,8 +320,8 @@ const BuyerTransactions = () => {
         
         // Fetch data from JSON server
         // Get unlocks and credit purchases for the buyer
-        const unlocksResponse = await fetch(`http://localhost:3001/unlocks`);
-        const creditsResponse = await fetch(`http://localhost:3001/buyCredits`);
+        const unlocksResponse = await fetch(`http://localhost:3001/api/unlocks`);
+        const creditsResponse = await fetch(`http://localhost:3001/api/buyCredits`);
 
         if (!unlocksResponse.ok) {
           throw new Error(`HTTP error! status: ${unlocksResponse.status}`);
