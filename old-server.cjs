@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
+const { v4: uuidv4 } = require('uuid');
 
 const server = express();
 
@@ -195,6 +196,191 @@ server.get('/api/listings', async (req, res) => {
   }
 });
 
+// Custom route for user-specific listings
+server.get('/api/listings/:username', async (req, res) => {
+  try {
+    const username = req.params.username;
+    const [listings] = await pool.execute(
+      'SELECT * FROM createdKeys WHERE username = ? ORDER BY creationDate DESC',
+      [username]
+    );
+    res.json(listings);
+  } catch (error) {
+    console.error('User listings error:', error);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Custom route for editing a key listing
+server.put('/api/listings/:id', async (req, res) => {
+  try {
+    const listingId = req.params.id;
+    const { 
+      keyTitle, 
+      description, 
+      price, 
+      tags, 
+      expirationDate,
+      isActive 
+    } = req.body;
+
+    // First, verify the listing exists and get current data
+    const [currentListing] = await pool.execute(
+      'SELECT * FROM createdKeys WHERE id = ?',
+      [listingId]
+    );
+
+    if (currentListing.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Listing not found' 
+      });
+    }
+
+    const listing = currentListing[0];
+
+    // Prepare update data (only update provided fields)
+    const updateData = {};
+    const updateFields = [];
+    const updateValues = [];
+
+    if (keyTitle !== undefined) {
+      updateData.keyTitle = keyTitle;
+      updateFields.push('keyTitle = ?');
+      updateValues.push(keyTitle);
+    }
+
+    if (description !== undefined) {
+      updateData.description = description;
+      updateFields.push('description = ?');
+      updateValues.push(description);
+    }
+
+    if (price !== undefined) {
+      updateData.price = parseInt(price);
+      updateFields.push('price = ?');
+      updateValues.push(parseInt(price));
+    }
+
+    if (tags !== undefined) {
+      const processedTags = Array.isArray(tags) ? tags : 
+        (typeof tags === 'string' ? tags.split(',').map(tag => tag.trim()).filter(tag => tag) : []);
+      updateData.tags = JSON.stringify(processedTags);
+      updateFields.push('tags = ?');
+      updateValues.push(JSON.stringify(processedTags));
+    }
+
+    if (expirationDate !== undefined) {
+      updateData.expirationDate = expirationDate;
+      updateFields.push('expirationDate = ?');
+      updateValues.push(expirationDate);
+    }
+
+    if (isActive !== undefined) {
+      updateData.isActive = isActive;
+      updateFields.push('isActive = ?');
+      updateValues.push(isActive);
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No valid fields provided for update' 
+      });
+    }
+
+    // Add updatedAt timestamp
+    updateFields.push('updatedAt = ?');
+    updateValues.push(Date.now());
+
+    // Build and execute update query
+    const updateQuery = `UPDATE createdKeys SET ${updateFields.join(', ')} WHERE id = ?`;
+    updateValues.push(listingId);
+
+    await pool.execute(updateQuery, updateValues);
+
+    // Get updated listing
+    const [updatedListing] = await pool.execute(
+      'SELECT * FROM createdKeys WHERE id = ?',
+      [listingId]
+    );
+
+    res.json({
+      success: true,
+      listing: updatedListing[0],
+      message: 'Listing updated successfully'
+    });
+
+  } catch (error) {
+    console.error('Update listing error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Database error occurred while updating listing' 
+    });
+  }
+});
+
+// Custom route for deleting a key listing
+server.delete('/api/listings/:id', async (req, res) => {
+  try {
+    const listingId = req.params.id;
+    const { username } = req.body; // For security, verify ownership
+
+    // First, verify the listing exists and check ownership
+    const [listing] = await pool.execute(
+      'SELECT * FROM createdKeys WHERE id = ?',
+      [listingId]
+    );
+
+    if (listing.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Listing not found' 
+      });
+    }
+
+    // Verify ownership (optional security check)
+    if (username && listing[0].username !== username) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'You can only delete your own listings' 
+      });
+    }
+
+    // Check if any keys have been sold
+    if (listing[0].sold > 0) {
+      // If keys have been sold, just deactivate instead of deleting
+      await pool.execute(
+        'UPDATE createdKeys SET isActive = false WHERE id = ?',
+        [listingId]
+      );
+
+      res.json({
+        success: true,
+        message: 'Listing deactivated successfully (some keys were already sold)'
+      });
+    } else {
+      // If no keys sold, completely delete the listing
+      await pool.execute(
+        'DELETE FROM createdKeys WHERE id = ?',
+        [listingId]
+      );
+
+      res.json({
+        success: true,
+        message: 'Listing deleted successfully'
+      });
+    }
+
+  } catch (error) {
+    console.error('Delete listing error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Database error occurred while deleting listing' 
+    });
+  }
+});
+
 // Custom route for user notifications
 server.get('/api/notifications/:username', async (req, res) => {
   try {
@@ -215,50 +401,122 @@ server.get('/api/notifications/:username', async (req, res) => {
 // Custom route for create key
 server.post('/api/create-key', async (req, res) => {
   try {
-    const { title, price_credits } = req.body;
+    const { 
+      title, 
+      price_credits, 
+      email, 
+      username, 
+      file, 
+      description, 
+      tags, 
+      encryptionKey,
+      keys_available,
+      expiration_days
+    } = req.body;
+
+    console.log('Creating key with data:', { 
+      title, 
+      price_credits, 
+      email, 
+      username, 
+      file, 
+      description, 
+      tags, 
+      encryptionKey,
+      keys_available,
+      expiration_days
+    });
+
+    // Validate required fields
+    if (!title || !price_credits || !file) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Title, price, and keys are required' 
+      });
+    }
+
+    // Process the keys from file content
+    const keysArray = file.split('\n')
+      .map(key => key.trim())
+      .filter(key => key.length > 0);
+
+    if (keysArray.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No valid keys found in the provided content' 
+      });
+    }
+
+    const quantity = keys_available || keysArray.length;
     
-    // Simulate file processing
+    // Calculate expiration date if provided
+    let expirationDate = null;
+    if (expiration_days && expiration_days > 0) {
+      const expDate = new Date();
+      expDate.setDate(expDate.getDate() + expiration_days);
+      expirationDate = expDate.toISOString().slice(0, 19).replace('T', ' ');
+    }
+
+    // Simulate file processing with a short delay
     setTimeout(async () => {
       try {
         const keyId = `key_${Date.now()}`;
-        const quantity = Math.floor(Math.random() * 50) + 10;
-        
+        // Generate a unique id for the primary key (VARCHAR(10))
+        const id = Math.random().toString(36).substring(2, 12).toUpperCase();
+
+        // Process tags
+        let processedTags = [];
+        if (Array.isArray(tags)) {
+          processedTags = tags;
+        } else if (typeof tags === 'string') {
+          processedTags = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+        }
+        processedTags.push('uploaded'); // Add default tag
+
         await pool.execute(
-          'INSERT INTO createdKeys (keyId, username, email, keyTitle, keyValue, description, price, quantity, sold, available, creationDate, expirationDate, isActive, isReported, reportCount, encryptionKey, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO createdKeys (id, keyId, username, email, keyTitle, keyValue, description, price, quantity, sold, available, creationDate, expirationDate, isActive, isReported, reportCount, encryptionKey, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [
+            id,
             keyId,
-            'seller_123',
-            'jane.seller@example.com',
+            username || 'demo_seller',
+            email || 'seller@example.com',
             title || 'New Key Listing',
-            `DEMO-KEY-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-            `Generated key listing: ${title}`,
+            JSON.stringify(keysArray), // Store all keys as JSON array
+            description || 'No description provided.',
             parseInt(price_credits) || 100,
             quantity,
             0,
             quantity,
             Date.now(),
-            null,
+            expirationDate,
             true,
             false,
             0,
-            `enc_key_${Date.now()}`,
-            JSON.stringify(['demo', 'uploaded'])
+            encryptionKey || `enc_key_${Date.now()}`,
+            JSON.stringify(processedTags)
           ]
         );
-        
+
         res.json({
           success: true,
           uploadId: keyId,
-          message: 'Keys uploaded successfully'
+          keysProcessed: keysArray.length,
+          message: `Successfully uploaded ${keysArray.length} keys`
         });
       } catch (error) {
-        console.error('Create key error:', error);
-        res.status(500).json({ success: false, message: 'Database error' });
+        console.error('Create key database error:', error);
+        res.status(500).json({ 
+          success: false, 
+          message: 'Database error occurred while creating listing' 
+        });
       }
     }, 1000);
   } catch (error) {
     console.error('Create key outer error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error occurred while processing request' 
+    });
   }
 });
 

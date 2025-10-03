@@ -207,10 +207,12 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ 
-            username: email, // Using email as username for login
+            email: email, // Using email as username for login
             password: password 
           })
         });
+
+        localStorage.setItem('passwordtxt', password); // Mark CAPTCHA as passed for this session
 
         if (!loginResponse.ok) {
           const errorData = await loginResponse.json();

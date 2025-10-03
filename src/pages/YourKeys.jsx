@@ -118,6 +118,8 @@ const YourKeys = () => {
   const [openViewDialog, setOpenViewDialog] = useState(false);
   const [viewingContent, setViewingContent] = useState(null);
 
+
+
   useEffect(() => {
     const loadAll = async () => {
       try {
@@ -134,6 +136,8 @@ const YourKeys = () => {
       }
     };
     loadAll();
+
+
   }, []);
 
   const searchKeys = () => {
@@ -148,26 +152,12 @@ const YourKeys = () => {
     );
   };
 
-  // const searchSubs = () => {
-  //   const term = searchTermSub.toLowerCase();
-  //   setFilteredSubs(
-  //     subscriptionList.filter(
-  //       (s) =>
-  //         String(s.title || '').toLowerCase().includes(term) ||
-  //         String(s.host_username || '').toLowerCase().includes(term)
-  //     )
-  //   );
-  // };
-
   const handleSearchKeys = (e) => {
     e?.preventDefault?.();
     searchKeys();
   };
 
-  // const handleSearchSubs = (e) => {
-  //   e?.preventDefault?.();
-  //   searchSubs();
-  // };
+
 
   const sortContent = (rows) => {
     const sorted = [...rows].sort((a, b) => {
@@ -209,20 +199,6 @@ const YourKeys = () => {
     setViewingContent(null);
   };
 
-  // const handleDeleteFromView = async () => {
-  //   if (!viewingContent) return;
-  //   try {
-  //     await handleDeleteUserContent(viewingContent.id);
-  //     handleCloseViewDialog();
-  //     // refresh
-  //     const updated = contentList.filter((c) => c.id !== viewingContent.id);
-  //     setContentList(updated);
-  //     setFilteredContent(updated);
-  //   } catch (err) {
-  //     console.error('Failed to delete content from view:', err);
-  //   }
-  // };
-
   const renderContentPreview = (content) => {
     if (!content) return null;
 
@@ -236,29 +212,7 @@ const YourKeys = () => {
     if (typeof contentData === 'object') contentData = JSON.stringify(contentData);
 
     switch (content.type) {
-      // case 'image':
-      //   return (
-      //     <Card sx={{ maxWidth: '100%', mb: 2 }}>
-      //       <CardMedia component="img" height="300" image={String(contentData)} alt={content.title || 'Content image'} sx={{ objectFit: 'contain' }} />
-      //     </Card>
-      //   );
-      // case 'video':
-      //   return (
-      //     <Card sx={{ maxWidth: '100%', mb: 2 }}>
-      //       <CardMedia component="video" height="300" src={String(contentData)} controls sx={{ objectFit: 'contain' }} />
-      //     </Card>
-      //   );
-      // case 'url':
-      //   return (
-      //     <Card sx={{ maxWidth: '100%', mb: 2 }}>
-      //       <CardContent>
-      //         <Typography variant="body2" color="text.secondary">URL Content:</Typography>
-      //         <Link href={String(contentData)} target="_blank" rel="noopener noreferrer" sx={{ wordBreak: 'break-all' }}>
-      //           <Typography variant="body1">{String(contentData)}</Typography>
-      //         </Link>
-      //       </CardContent>
-      //     </Card>
-      //   );
+     
       case 'text':
       default:
         return (
@@ -569,75 +523,7 @@ const YourKeys = () => {
         </TableContainer>
       </Paper>
 
-      {/* Subscriptions */}
-      {/* <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, border: '1px solid #e9ecef', backgroundColor: '#f8f9fa', borderRadius: 2 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0 }}>
-          <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>Your Subscriptions... </Typography><strong>New Features Coming Soon</strong>
-        </div>
-        <Box
-          component="form"
-          onSubmit={handleSearchSubs}
-          sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center', mb: 2 }}
-        >
-          <TextField
-            label="Search subscriptions"
-            value={searchTermSub}
-            onChange={(e) => setSearchTermSub(e.target.value)}
-            size="small"
-            sx={{ flex: { xs: '1 1 100%', md: '0 1 320px' } }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start"><SearchIcon /></InputAdornment>
-              ),
-            }}
-          />
-          <Chip label={`${subsToDisplay.length} subscription${subsToDisplay.length === 1 ? '' : 's'}`} variant="outlined" color="primary" />
-          <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} size="small">
-            <MenuItem value="date">Date</MenuItem>
-            <MenuItem value="amount">Amount</MenuItem>
-            <MenuItem value="username">Username</MenuItem>
-          </Select>
-          <Select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} size="small">
-            <MenuItem value="asc">Ascending</MenuItem>
-            <MenuItem value="desc">Descending</MenuItem>
-          </Select>
-          <Box sx={{ ml: 'auto' }}>
-            <Button type="submit" variant="contained" sx={{ textTransform: 'none' }}>Search</Button>
-          </Box>
-        </Box>
-
-        <TableContainer component={Paper} sx={{ maxHeight: { xs: 360, md: 480 }, overflowY: 'auto', borderRadius: 1 }}>
-          <Table stickyHeader>
-            <TableHead sx={{ '& .MuiTableCell-stickyHeader': { backgroundColor: (t) => t.palette.background.paper + ' !important', fontWeight: 600 } }}>
-              <TableRow>
-                <TableCell>Title</TableCell>
-                <TableCell>Host</TableCell>
-                <TableCell>Date</TableCell>
-                <TableCell>Cost</TableCell>
-                <TableCell align="center">Open</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {subsToDisplay.map((s) => (
-                <TableRow key={s.id} hover>
-                  <TableCell>{s.title}</TableCell>
-                  <TableCell>{s.host_username}</TableCell>
-                  <TableCell>{s.created_at?.slice(0, 10)}</TableCell>
-                  <TableCell>₡{s.cost}</TableCell>
-                  <TableCell align="center">
-                    <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={() => navigate(`/unlock/${s.reference_id}`)}>
-                      View
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {subsToDisplay.length === 0 && (
-                <TableRow><TableCell colSpan={5} align="center">No subscriptions found.</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper> */}
+     
 
       {/* View Content Dialog */}
       <Dialog 
@@ -682,14 +568,7 @@ const YourKeys = () => {
             )}
           </Paper>
         </DialogContent>
-        {/* <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button variant="outlined" onClick={() => { setShareLink(`${siteURL}/unlock/${viewingContent.reference_id}`); setOpenShareDialog(true); }} startIcon={<ShareIcon />}>
-            Share
-          </Button>
-          <Button variant="outlined" color="error" onClick={handleDeleteFromView} startIcon={<DeleteIcon />}>
-            Delete
-          </Button>
-        </DialogActions> */}
+        
       </Dialog>
 
       {/* Share Dialog */}

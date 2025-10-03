@@ -18,6 +18,7 @@ import Account from './pages/Account';
 // import { fetchUserProfile } from './api/client';
 import { useNavigate } from 'react-router-dom';
 // import YourKeys from './pages/YourKeys';
+import Listings from './pages/Listing';
 import Purchase from './pages/Purchase';
 import Info from './pages/Info';
 import './styles.css';
@@ -25,18 +26,63 @@ import { ToastProvider } from './contexts/ToastContext';
 
 export default function App() {
 
-  const [userData, setUserData] = useState({
-    loginStatus: false,
-    accountType: '', // 'donor' or 'host'
-    username: '',
-    email: '',
-    firstName: '',
-    lastName: '',
-    phoneNumber: '',
-    birthDate: '',
-    encryptionKey: '',
-    credits: 0,
-  });
+
+
+  // example user data for testing
+  // localStorage.setItem('userdata', JSON.stringify({"id":"UU4YFJICVO","loginStatus":true,"lastLogin":null,"accountType":"buyer","username":"ikemnkur","email":"ikemnkur@gmail.com","firstName":"Ikem","lastName":"Nkurumeh","phoneNumber":"","birthDate":"2000-03-02","encryptionKey":"enc_key_1759455609939","credits":100,"reportCount":0,"isBanned":false,"banReason":"","banDate":null,"banDuration":null,"createdAt":1759455609939,"updatedAt":1759455609939,"twoFactorEnabled":false,"twoFactorSecret":"","recoveryCodes":[],"profilePicture":"https://i.pravatar.cc/150?img=6","bio":"","socialLinks":{}}));
+
+  const [userData, setUserData] = useState(
+    localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')) : {
+      id: '',
+      loginStatus: false,
+      lastLogin: null,
+      accountType: '',
+      username: '',
+      email: '',
+      firstName: '',
+      lastName: '',
+      phoneNumber: '',
+      birthDate: '',
+      encryptionKey: '',
+      credits: 0,
+      reportCount: 0,
+      isBanned: false,
+      banReason: '',
+      banDate: null,
+      banDuration: null,
+      createdAt: null,
+      updatedAt: null,
+      twoFactorEnabled: false,
+      twoFactorSecret: '',
+      recoveryCodes: [],
+      profilePicture: '',
+      bio: '',
+      socialLinks: {}
+    }
+  );
+
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  // const navigate = useNavigate();
+
+  // Function to fetch user profile from server
+  const fetchUserProfile = async () => {
+    const storedUserData = JSON.parse(localStorage.getItem("userdata") || '{}');
+    const username = storedUserData.username || 'user_123';
+
+    const response = await fetch('http://localhost:3001/api/userData');
+    if (!response.ok) throw new Error('Failed to fetch user data');
+
+    const allUsers = await response.json();
+    const currentUser = allUsers.find(user => user.username === username);
+
+    if (currentUser) {
+      return currentUser;
+    } else {
+      throw new Error('User not found');
+    }
+  }
+
 
   // Load user profile from server
   const loadUserProfile = async () => {
@@ -58,8 +104,8 @@ export default function App() {
   };
 
   // Determine account type and login status, temporarily using localStorage
-  const accountType = userData.accountType || localStorage.getItem('accountType'); // 'donor', 'host', or null
-  const isLoggedIn = userData.loginStatus || !!accountType;
+  const accountType = userData.accountType || (localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).accountType : null); // 'buyer', 'seller', or null
+  const isLoggedIn = userData.loginStatus || (localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).loginStatus : false); // 'buyer', 'seller', or null
 
   return (
     <ThemeProvider theme={theme}>
@@ -70,10 +116,12 @@ export default function App() {
           <Routes>
             {/* Public Routes */}
             {/* {!isLoggedIn && ( */}
-              <Route path="/login" element={<Auth isLogin={true} />} />
+            <Route path="/login" element={<Auth isLogin={true} />} />
 
             {/* )} */}
-            <Route path="/register" element={<Auth isLogin={false} />} />
+            {!isLoggedIn && (
+              <Route path="/register" element={<Auth isLogin={false} />} />
+            )}
             <Route path="/help" element={<HelpPage />} />
 
             {/* Seller/ Buyer Routes */}
@@ -92,6 +140,7 @@ export default function App() {
               <Route path="/earnings" element={<Earnings />} />
               <Route path="/create-key" element={<CreateKey />} />
               <Route path="/redeem" element={<Redeem />} />
+              <Route path="/listings" element={<Listings />} />
             </>
             {/* )}/ */}
 
@@ -101,12 +150,12 @@ export default function App() {
               <>
                 <Route path="/" element={<Info />} />
               </>
-            )} 
+            )}
             {/* logged in */}
             {isLoggedIn && (
               <Route path="/" element={<Main />} />
             )}
-            
+
 
 
           </Routes>

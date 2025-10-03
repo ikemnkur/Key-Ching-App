@@ -17,6 +17,8 @@ export default function Unlock() {
   const { error, info, success } = useToast();
   const params = useParams();
 
+  const userData = JSON.parse(localStorage.getItem("userdata") || '{"username":"user_123","email":"user_123@example.com"}');
+
 
 
   // Mock data for different key types
@@ -89,7 +91,13 @@ export default function Unlock() {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1500));
 
-      const { data } = await api.post(`/unlock/${item.id}`);
+      const { data } = await api.post(`/unlock/${item.id}`,
+        {
+          // You can include any necessary payload here
+          username: userData.username,
+          email: userData.email,
+        }
+      );
 
       if (data?.key) {
         setKeyValue(data.key);
@@ -195,6 +203,30 @@ export default function Unlock() {
                   {item.description}
                 </Typography>
               </Grid>
+              <Grid xs={12} sm={4}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Quantity
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                  {item.quantity}
+                </Typography>
+              </Grid>
+              <Grid xs={12} sm={4}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Sold
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                  {item.sold}
+                </Typography>
+              </Grid>
+              <Grid xs={12} sm={4}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Available
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                  {item.available}
+                </Typography>
+              </Grid>
             </Grid>
           </Stack>
         </Paper>
@@ -230,7 +262,7 @@ export default function Unlock() {
         <Alert severity="info" sx={{ mt: 3 }}>
           <Typography variant="body2">
             <strong>Important:</strong> Once unlocked, make sure to copy and save your key immediately.
-            Keys are shown only once for security reasons.
+            Keys are shown only one time.
           </Typography>
         </Alert>
 

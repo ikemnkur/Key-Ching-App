@@ -130,7 +130,7 @@ const SellerTransactions = () => {
           id: earning.id,
           transaction_type: earning.transactionType,
           credits: Math.abs(earning.amount), // Convert to positive for display
-          amount_usd: earning.amount.toFixed(2),
+          amount_usd: earning.amount,
           key_title: earning.keyTitle,
           buyer_username: earning.buyer,
           status: earning.status,
@@ -848,7 +848,7 @@ const SellerTransactions = () => {
                     USD Equivalent
                   </Typography>
                   <Typography sx={{ color: '#e0e0e0' }}>
-                    ${selectedTransaction.amount_usd}
+                    ${selectedTransaction.amount_usd/1000}
                   </Typography>
                 </Grid>
               )}

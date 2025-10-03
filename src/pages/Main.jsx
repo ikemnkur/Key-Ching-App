@@ -5,34 +5,53 @@ import Notifications from '../components/Notifications.jsx';
 import api from '../api/client';
 import { useToast } from '../contexts/ToastContext';
 import { useNavigate } from 'react-router-dom';
+import { Password } from '@mui/icons-material';
 
 export default function Wallet() {
     const [balance, setBalance] = useState(null);
     const { success, error } = useToast();
     const accountType = localStorage.getItem('accountType'); // 'buyer', 'seller', or null
-    
+    const userData = JSON.parse(localStorage.getItem("userdata") || '{"username":"user_123"}');
 
     const navigate = useNavigate();
 
     const load = async () => {
+
         try {
             // Direct API call to JSON Server
-            const response = await fetch('http://localhost:3001/api/wallet');
+            let response;
 
-            if (response.ok) {
-                const wallets = await response.json();
-                // Get the first user's wallet or find by username if available
-                const userData = JSON.parse(localStorage.getItem("userdata") || '{"username":"user_123"}');
-                const userWallet = wallets.find(w => w.username === userData.username) || wallets[0];
+            // fetch data if no data fetched before or last fetch was over 1.5 minutes ago
+            let lastDataFetchTooOld = !localStorage.getItem('lastDataFetch') ||
+                (Date.now() - parseInt(localStorage.getItem('lastDataFetch') || "0", 10) > 1.5 * 60 * 1000);
 
-                setBalance(userWallet?.balance ?? 750);
+            if (lastDataFetchTooOld) {
+                response = await api.post(`http://localhost:3001/api/user`, {
+                    username: userData.username,
+                    email: userData.email,
+                    password: localStorage.getItem('passwordtxt')
+                });
+
+                if (response.status === 200 && response.data) {
+                    console.log("User profile response data:", response.data);
+                    localStorage.setItem('Earnings', JSON.stringify(response.data.earnings || []));
+                    localStorage.setItem('Unlocks', JSON.stringify(response.data.unlocks || []));
+                    localStorage.setItem('userdata', JSON.stringify(response.data.user || {}));
+                    localStorage.setItem('lastDataFetch', Date.now().toString()); // Set account type
+                    setBalance(response.data.user?.credits || 0); // Use credits from userData or fallback
+                } else {
+                    throw new Error('Failed to fetch wallet data');
+                }
             } else {
-                throw new Error('Failed to fetch wallet data');
+                // Use cached data if not fetching new data
+                const cachedUser = JSON.parse(localStorage.getItem('userdata') || '{}');
+                setBalance(cachedUser.credits || 0);
             }
         } catch (e) {
             console.error('Error loading wallet balance:', e);
             setBalance(750); // demo fallback with realistic amount
         }
+
     };
 
     useEffect(() => { load(); }, []);
@@ -137,6 +156,20 @@ export default function Wallet() {
                                     }}
                                 >
                                     Earnings
+                                </Button>
+                                 <Button
+                                    onClick={() => navigate("/listings")}
+                                    variant="outlined"
+                                    sx={{
+                                        borderColor: '#7d7d2eff',
+                                        color: '#7d7d2eff',
+                                        '&:hover': {
+                                            backgroundColor: '#7d752eff',
+                                            color: '#fff'
+                                        }
+                                    }}
+                                >
+                                    Key Listings
                                 </Button>
                                 <Button
                                     onClick={() => navigate("/redeem")}

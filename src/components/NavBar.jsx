@@ -4,7 +4,7 @@ import { Link as RouterLink } from 'react-router-dom';
 
 export default function NavBar() {
 
-  const accountType = localStorage.getItem('accountType'); // 'donor', 'host', or null
+  const accountType = localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).accountType : null; // 'buyer', 'seller', or null
   const loggedIn = !!accountType;
 
   function handleLogout() {
@@ -12,6 +12,10 @@ export default function NavBar() {
     localStorage.removeItem('userdata');
     localStorage.removeItem('accountType');
     localStorage.removeItem('unlockedKeys'); // Clear unlocked keys on logout
+    window.location.href = '/login'; // Redirect to login page
+  }
+
+  function handleLogin() {
     window.location.href = '/login'; // Redirect to login page
   }
 
@@ -26,7 +30,7 @@ export default function NavBar() {
         <Box sx={{ display: 'flex', gap: 1 }}>
 
           {loggedIn && <Button component={RouterLink} to="/account" color="secondary" variant="outlined">Account</Button>}
-          <Button onClick={loggedIn ? handleLogout : null} color={loggedIn ? "secondary" : "primary"} variant="outlined">{loggedIn ? "Logout" : "Login"}</Button>
+          <Button onClick={loggedIn ? handleLogout : handleLogin} color={loggedIn ? "secondary" : "primary"} variant="outlined">{loggedIn ? "Logout" : "Login"}</Button>
           {/* <Button component={RouterLink} to="/" color="secondary" variant="outlined">Main</Button> */}
           
          

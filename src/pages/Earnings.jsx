@@ -9,17 +9,17 @@ export default function Wallet(){
   const [balance, setBalance] = useState(null);
   const { success, error } = useToast();
 
-  const load = async ()=>{
-    try{
-      const { data } = await api.get('/wallet/balance');
-      setBalance(data?.balance ?? 0);
-    }catch(e){
-      console.error(e);
-      setBalance(100); // demo fallback
-    }
-  };
+  // const load = async ()=>{
+  //   try{
+  //     const { data } = await api.get('/wallet/balance');
+  //     setBalance(data?.balance ?? 0);
+  //   }catch(e){
+  //     console.error(e);
+  //     setBalance(100); // demo fallback
+  //   }
+  // };
 
-  useEffect(()=>{ load(); },[]);
+  // useEffect(()=>{ load(); },[]);
 
   const onPaymentError = () => error('Payment could not be started');
 

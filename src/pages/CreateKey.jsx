@@ -54,48 +54,197 @@ export default function CreateKey(){
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null); // 'success', 'error', or null
   const [errorMessage, setErrorMessage] = useState('');
-  const {userData} = JSON.parse(localStorage.getItem('userdata') || '{}');
+  // const userData = JSON.parse(localStorage.getItem('userdata') || '{}');
+   const userData = JSON.parse(localStorage.getItem("userdata") || '{"username":"user_123"}');
   const [keysAvailable, setKeysAvailable] = useState(10);
   const [expirationDays, setExpirationDays] = useState('');
-
+  const [description, setDescription] = useState('');
+  const [tags, setTags] = useState('');
+  
+  // Function to validate and count keys
+  const validateKeys = (content) => {
+    if (!content || !content.trim()) return { valid: false, count: 0, errors: [] };
+    
+    const lines = content.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    const errors = [];
+    const validKeys = [];
+    
+    lines.forEach((line, index) => {
+      // Basic validation - keys should be at least 4 characters and not contain spaces
+      if (line.length < 4) {
+        errors.push(`Line ${index + 1}: Key too short (minimum 4 characters)`);
+      } else if (line.includes(' ')) {
+        errors.push(`Line ${index + 1}: Key contains spaces`);
+      } else {
+        validKeys.push(line);
+      }
+    });
+    
+    return {
+      valid: errors.length === 0 && validKeys.length > 0,
+      count: validKeys.length,
+      errors: errors,
+      keys: validKeys
+    };
+  };
+  
   const submit = async () => {
     if (!file && !keyText.trim()) {
       setUploadStatus('error');
+      setErrorMessage('Please provide keys via file upload or text input.');
       return;
     }
 
     setIsUploading(true);
     setUploadStatus(null);
-    
-    const fd = new FormData();
-    fd.append('title', title);
-    fd.append('price_credits', price);
-    fd.append('username', userData?.username || 'user_123');
-    fd.append('email', userData?.email || '');
-    
+    setErrorMessage('');
+
+    // Prepare and validate key content
+    let fileContent = '';
     if (uploadMethod === 'text' && keyText.trim()) {
-      const blob = new Blob([keyText], { type: 'text/plain' });
-      const textFile = new File([blob], 'keys.txt', { type: 'text/plain' });
-      fd.append('file', textFile);
+      fileContent = keyText.trim();
     } else if (file) {
-      fd.append('file', file);
+      // Read file as text
+      try {
+        fileContent = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result);
+          reader.onerror = reject;
+          reader.readAsText(file);
+        });
+      } catch (err) {
+        setIsUploading(false);
+        setUploadStatus('error');
+        setErrorMessage('Failed to read file.');
+        return;
+      }
     }
 
+    // Validate keys
+    const validation = validateKeys(fileContent);
+    if (!validation.valid) {
+      setIsUploading(false);
+      setUploadStatus('error');
+      setErrorMessage(`Key validation failed:\n${validation.errors.join('\n')}`);
+      return;
+    }
+
+    // Check if keys_available matches actual key count
+    if (keysAvailable !== validation.count) {
+      const shouldContinue = window.confirm(
+        `You specified ${keysAvailable} keys available, but uploaded ${validation.count} keys. ` +
+        `Do you want to continue with ${validation.count} keys?`
+      );
+      if (shouldContinue) {
+        setKeysAvailable(validation.count);
+      } else {
+        setIsUploading(false);
+        return;
+      }
+    }
+
+    // Compose request body as JSON (not FormData)
+    const payload = {
+      title,
+      price_credits: price,
+      email: userData?.email || '',
+      username: userData?.username || 'demo_seller',
+      file: fileContent,
+      // Optionally add more fields if your server expects them
+      keys_available: keysAvailable,
+      description,
+      expiration_days: expirationDays || undefined,
+      tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+      encryptionKey: userData?.encryptionKey || ''
+    };
+
     try {
-      const { data } = await api.post('/create-key', fd);
-      setUploadStatus('success');
-      // Reset form
-      setTitle('');
-      setPrice(50);
-      setFile(null);
-      setKeyText('');
+      const { data } = await api.post('/api/create-key', payload);
+      if (data && data.success) {
+        setUploadStatus('success');
+        // Update success message to include number of keys processed
+        const successMsg = data.keysProcessed ? 
+          `Successfully uploaded ${data.keysProcessed} keys!` : 
+          'Keys uploaded successfully!';
+        setErrorMessage(successMsg); // Use error message state for success message too
+        
+        // Reset form
+        setTitle('');
+        setPrice(50);
+        setFile(null);
+        setKeyText('');
+        setDescription('');
+        setExpirationDays('');
+        setKeysAvailable(10);
+        setTags('');
+      } else {
+        setUploadStatus('error');
+        setErrorMessage(data?.message || 'Upload failed.');
+      }
     } catch (e) {
       console.error(e);
       setUploadStatus('error');
+      setErrorMessage(e.response?.data?.message || 'Server error. Please try again.');
     } finally {
       setIsUploading(false);
     }
   };
+  
+
+//   // Server route for /api/create-key
+// 
+// server.post('/api/create-key', async (req, res) => {
+//   try {
+//     const { title, price_credits, email, username, file, desrciption, tags, encryptionKey } = req.body;
+
+//     console.log('Creating key with data:', { title, price_credits, email, username, file, desrciption, tags, encryptionKey });
+//     // Simulate file processing
+//     setTimeout(async () => {
+//       try {
+//         const keyId = `key_${Date.now()}`;
+//         const quantity = Math.floor(Math.random() * 50) + 10;
+//         // Generate a unique id for the primary key
+//         const id = Math.random().toString(36).substring(2, 12).toUpperCase();
+
+//         await pool.execute(
+//           'INSERT INTO createdKeys (id, keyId, username, email, keyTitle, keyValue, description, price, quantity, sold, available, creationDate, expirationDate, isActive, isReported, reportCount, encryptionKey, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+//           [
+//             id,
+//             keyId,
+//             username || 'demo_seller',
+//             email || 'jane.seller@example.com',
+//             title || 'New Key Listing',
+//             file,
+//             desrciption || 'No description provided.',
+//             parseInt(price_credits) || 100,
+//             quantity,
+//             0,
+//             quantity,
+//             Date.now(),
+//             null,
+//             true,
+//             false,
+//             0,
+//             encryptionKey || `enc_key_${Date.now()}`,
+//             tags || JSON.stringify(['demo', 'uploaded'])
+//           ]
+//         );
+
+//         res.json({
+//           success: true,
+//           uploadId: keyId,
+//           message: 'Keys uploaded successfully'
+//         });
+//       } catch (error) {
+//         console.error('Create key error:', error);
+//         res.status(500).json({ success: false, message: 'Database error' });
+//       }
+//     }, 1000);
+//   } catch (error) {
+//     console.error('Create key outer error:', error);
+//     res.status(500).json({ success: false, message: 'Server error' });
+//   }
+// });
 
   return (
     <Container sx={{ py: 4, maxWidth: 'md' }}>
@@ -112,12 +261,15 @@ export default function CreateKey(){
         {/* Status Messages */}
         {uploadStatus === 'success' && (
           <Alert severity="success" onClose={() => setUploadStatus(null)}>
-            Keys uploaded successfully! Your listing is now live.
+            {uploadStatus === 'success' && errorMessage.includes('Successfully') ? 
+              errorMessage + ' Your listing is now live.' : 
+              'Keys uploaded successfully! Your listing is now live.'
+            }
           </Alert>
         )}
         {uploadStatus === 'error' && (
           <Alert severity="error" onClose={() => setUploadStatus(null)}>
-            Upload failed. Please check your file and try again.
+            {errorMessage || 'Upload failed. Please check your file and try again.'}
           </Alert>
         )}
 
@@ -140,7 +292,8 @@ export default function CreateKey(){
                     placeholder="e.g., Premium Gaming Keys Bundle"
                     helperText="Give your key listing a descriptive title"
                   />
-                  <TextField 
+                 <Box sx={{ display: 'flex', gap: 2 }}> 
+                   <TextField 
                     type="number" 
                     label="Price per Key (credits)" 
                     value={price} 
@@ -160,6 +313,7 @@ export default function CreateKey(){
                     inputProps={{ min: 1, max: 10000 }}
                     helperText="Set the number of keys available for purchase"
                   />
+                 </Box>
                   {/* expiration date picker */}
                   <TextField 
                     type="number" 
@@ -170,7 +324,28 @@ export default function CreateKey(){
                     inputProps={{ min: 1, max: 365 }}
                     helperText="Set how many days before the listing expires (leave blank for no expiration)"
                   />
+                  {/* description */}
+                  <TextField
+                    label="Description"
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    multiline
+                    rows={4}
+                    fullWidth
+                    placeholder="Provide a detailed description of your key listing"
+                    helperText="Add any additional information or terms"
+                  />
+                  {/* tags */}
+                  <TextField
+                    label="Tags (comma separated)"
+                    value={tags}
+                    onChange={e => setTags(e.target.value)}
+                    fullWidth
+                    placeholder="e.g., gaming, premium, bundle"
+                    helperText="Add relevant tags to help users find your listing"
+                  />
                 </Stack>
+
               </Box>
 
               <Divider sx={{ my: 2 }} />
@@ -248,7 +423,14 @@ export default function CreateKey(){
                         fontSize: '0.9rem'
                       }
                     }}
-                    helperText={`${keyText.split('\n').filter(line => line.trim()).length} keys entered`}
+                    helperText={(() => {
+                      const validation = validateKeys(keyText);
+                      const baseText = `${validation.count} valid keys entered`;
+                      if (validation.errors.length > 0) {
+                        return `${baseText} (${validation.errors.length} errors found)`;
+                      }
+                      return baseText;
+                    })()}
                   />
                 )}
               </Box>
