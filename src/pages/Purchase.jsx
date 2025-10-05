@@ -5,6 +5,7 @@ import { Container, Stack, Typography, Card, CardContent, Divider, Skeleton } fr
 import api from '../api/client';
 import { uploadTransactionScreenshot } from '../api/api';
 import { useToast } from '../contexts/ToastContext';
+import axios from 'axios';
 
 export default function Purchase() {
 
@@ -14,7 +15,8 @@ export default function Purchase() {
     LTC: 'ltc1qgg5aggedmvjx0grd2k5shg6jvkdzt9dtcqa4dh',
     SOL: 'qaSpvAumg2L3LLZA8qznFtbrRKYMP1neTGqpNgtCPaU',
     ETH: '0x9a61f30347258A3D03228F363b07692F3CBb7f27',
-    XMR: '44X8AgosuXFCuRmBoDRc66Vw1FeCaL6vRiKRqrmqXeJdeKAciYuyaJj7STZnHMg7x8icHJL6M1hzeAPqSh8NSC1GGC9bkCp',
+    // XMR: '44X8AgosuXFCuRmBoDRc66Vw1FeCaL6vRiKRqrmqXeJdeKAciYuyaJj7STZnHMg7x8icHJL6M1hzeAPqSh8NSC1GGC9bkCp',
+    // XRP: 'rNpfDm8UwDTumCebchBadjVW2FEPteFgNg'
   };
 
   // Deposit wallet address mappings with blockchain info
@@ -23,7 +25,8 @@ export default function Purchase() {
     LTC: { address: 'ltc1qgg5aggedmvjx0grd2k5shg6jvkdzt9dtcqa4dh', blockchain: 'litecoin' },
     SOL: { address: 'qaSpvAumg2L3LLZA8qznFtbrRKYMP1neTGqpNgtCPaU', blockchain: 'solana' },
     ETH: { address: '0x9a61f30347258A3D03228F363b07692F3CBb7f27', blockchain: 'ethereum' },
-    XMR: { address: '44X8AgosuXFCuRmBoDRc66Vw1FeCaL6vRiKRqrmqXeJdeKAciYuyaJj7STZnHMg7x8icHJL6M1hzeAPqSh8NSC1GGC9bkCp', blockchain: 'monero' },
+    // XMR: { address: '44X8AgosuXFCuRmBoDRc66Vw1FeCaL6vRiKRqrmqXeJdeKAciYuyaJj7STZnHMg7x8icHJL6M1hzeAPqSh8NSC1GGC9bkCp', blockchain: 'monero' },
+    // XRP: { address: 'rNpfDm8UwDTumCebchBadjVW2FEPteFgNg', blockchain: 'ripple' }
   };
 
   // Currency ID mapping for CoinGecko API
@@ -32,7 +35,8 @@ export default function Purchase() {
     ETH: 'ethereum',
     LTC: 'litecoin',
     SOL: 'solana',
-    XMR: 'monero'
+    // XMR: 'monero',
+    // XRP: 'ripple'
   };
 
   const [balance, setBalance] = useState(null);
@@ -59,6 +63,10 @@ export default function Purchase() {
     time: ''
   });
 
+  const [txFile, setTXFile] = useState(null);
+  // const [filePreview, setFilePreview] = useState(null);
+  // const [fileError, setFileError] = useState('');
+
 
   // Calculate the amount in USD and crypto
   const dollarValueOfCoins = amount / 1000; // Assuming 1000 coins = $1
@@ -66,7 +74,7 @@ export default function Purchase() {
 
   const load = async () => {
     try {
-      const { data } = await api.get('/api/wallet/balance');
+      const { data } = await api.get(`/api/wallet/balance/${ud.username}`);
       setBalance(data?.balance ?? 0);
     } catch (e) {
       console.error(e);
@@ -82,20 +90,20 @@ export default function Purchase() {
         console.error('Currency not supported:', cryptoCurrency);
         return 0;
       }
-      
+
       const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`);
       const data = await response.json();
       return data[coinId]?.usd || 0;
     } catch (error) {
       console.error('Error fetching crypto rate:', error);
       // Fallback rates for demo
-      const fallbackRates = { BTC: 45000, ETH: 3000, LTC: 100, SOL: 50, XMR: 150 };
+      const fallbackRates = { BTC: 45000, ETH: 3000, LTC: 100, SOL: 50, XMR: 150, XRP: 0.5 };
       return fallbackRates[cryptoCurrency] || 0;
     }
   };
 
-  useEffect(() => { 
-    load(); 
+  useEffect(() => {
+    load();
     // Fetch initial rate
     fetchCryptoRate(currency).then(setRate);
   }, []);
@@ -111,10 +119,10 @@ export default function Purchase() {
     document.querySelector('[data-step="3"]')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleCancelOrder = () => {
-    // Navigate back to dashboard or previous page
-    navigate('/wallet'); // Adjust the path as needed
-  };
+  // const handleCancelOrder = () => {
+  //   // Navigate back to dashboard or previous page
+  //   navigate('/wallet'); // Adjust the path as needed
+  // };
 
   const handleCopyAddress = () => {
     const walletAddress = walletAddressMap[currency] || 'YOUR_WALLET_ADDRESS_HERE';
@@ -144,14 +152,16 @@ export default function Purchase() {
       });
   };
 
-// Example function to upload file to backend:
-  const uploadToBackend = async (file) => {
+  // Example function to upload file to backend:
+  const uploadToBackend = async (file, username, transactionHash) => {
     const formData = new FormData();
     formData.append('media', file);
+    formData.append('username', username);
+    formData.append('transactionHash', transactionHash);
 
     try {
       // uploadMediaFiles should return the media link or an object with mediaLink property
-      const response = await uploadTransactionScreenshot(formData);
+      const response = await uploadTransactionScreenshot(formData, username, transactionHash);
       console.log('Transaction screenshot file uploaded:', response);
 
       // If your backend returns { mediaLink: "..." }
@@ -174,7 +184,7 @@ export default function Purchase() {
   };
 
   // Enhanced screenshot upload handler
-  const handleScreenshotUpload = async (event) => {
+  const handleScreenshotUploadStep1 = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -207,6 +217,8 @@ export default function Purchase() {
     };
     reader.readAsDataURL(file);
 
+    setTXFile(file);
+
     // // Store file info for later use
     // const fileInfo = {
     //   name: file.name,
@@ -221,6 +233,34 @@ export default function Purchase() {
     // console.log('Screenshot uploaded:', fileInfo);
     // setMessage('Screenshot uploaded successfully!');
 
+    // // Upload logic (if you want to upload immediately)
+    // const formData = new FormData();
+    // formData.append('screenshot', file);
+    // formData.append('username', ud.username);
+    // formData.append('userId', ud.user_id || ud.id);
+    // formData.append('time', new Date().toISOString().split('T')[1]);
+    // formData.append('date', new Date().toISOString());
+
+    // try {
+    //   let mediaLink;
+
+    //   mediaLink = await uploadToBackend(file, ud?.username || 'anonymous', userDetails.transactionHash); // server returns { mediaLink }
+    //   formData.append('mediaLink', mediaLink);
+
+    //   setMessage('Screenshot uploaded successfully!');
+
+    // } catch (error) {
+    //   console.error('API - Error uploading screenshot:', error);
+    //   setFileError('An error occurred while uploading the image.');
+    // }
+  };
+
+
+  // Enhanced screenshot upload handler
+  const handleScreenshotUploadStep2 = async () => {
+
+    const file = txFile;
+
     // Upload logic (if you want to upload immediately)
     const formData = new FormData();
     formData.append('screenshot', file);
@@ -232,7 +272,8 @@ export default function Purchase() {
     try {
       let mediaLink;
 
-      mediaLink = await uploadToBackend(file); // server returns { mediaLink }
+      mediaLink = await uploadToBackend(file, ud?.username || 'anonymous', userDetails.transactionId); // server returns { mediaLink }
+
       formData.append('mediaLink', mediaLink);
 
       setMessage('Screenshot uploaded successfully!');
@@ -242,6 +283,7 @@ export default function Purchase() {
       setFileError('An error occurred while uploading the image.');
     }
   };
+
 
   // Function to remove uploaded file
   const handleRemoveFile = () => {
@@ -273,7 +315,7 @@ export default function Purchase() {
     // Only validate required fields (marked with asterisk)
     const requiredFields = ['name', 'email', 'walletAddress', 'transactionId'];
     const missingFields = requiredFields.filter(field => !userDetails[field]?.trim());
-    
+
     if (missingFields.length > 0) {
       setErrorMessage(`Please fill out all required fields: ${missingFields.join(', ')}`);
       return;
@@ -325,13 +367,21 @@ export default function Purchase() {
         console.log("Order logging disabled by user. Processing without user tracking.");
       }
 
-      // Simulate API call since validateCryptoTransaction is not imported
-      console.log("Submitting order:", data);
-      
-      setMessage(`Order submitted successfully! ${enableOrderLogging ? 'Order logged with user tracking.' : 'Processing without logging.'} Please wait for confirmation.`);
-      setOrderSubmitted(true);
-      setErrorMessage('');
-      
+      api.post(`/api/purchases/${ud?.username || 'anonymous'}`,
+        { data: data }
+      )
+        .then(() => {
+          setMessage(`Order submitted successfully! ${enableOrderLogging ? 'Order logged with user tracking.' : 'Processing without logging.'} Please wait for confirmation.`);
+          setOrderSubmitted(true);
+          setErrorMessage('');
+        })
+        .catch((error) => {
+          console.error('Error submitting order:', error);
+          setErrorMessage('An error occurred. Please try again.');
+        });
+
+      // handleScreenshotUploadStep2();
+
       // Scroll to Step 5
       setTimeout(() => {
         document.querySelector('[data-step="5"]')?.scrollIntoView({ behavior: 'smooth' });
@@ -344,6 +394,453 @@ export default function Purchase() {
   };
 
 
+  // // --- Helper function to fetch all transactions for an address and filter by date ---
+  // async function getAllTransactionsForLastHour(depositAddress, blockchain) {
+  //   let allTransactions = [];
+  //   let offset = 0;
+  //   const limit = 50; // Max per Blockchair API request
+  //   const oneHourAgo = new Date();
+  //   oneHourAgo.setHours(oneHourAgo.getHours() - 4); // Get date 1 hour ago
+
+
+
+  //   while (true) {
+  //     const url = `https://api.blockchair.com/${blockchain}/dashboards/address/${depositAddress}?transaction_details=true&limit=${limit}&offset=${offset}`;
+  //     try {
+  //       const response = await axios.get(url);
+  //       const data = response.data;
+
+  //       // Ensure data and transactions exist and are in the expected format
+  //       if (!data || !data.data || !data.data[depositAddress] || !data.data[depositAddress].transactions) {
+  //         console.warn(`Blockchair API response for ${depositAddress} was incomplete or empty.`);
+  //         break; // Exit if no transactions found or data structure is unexpected
+  //       }
+
+  //       const fetchedTransactions = data.data[depositAddress].transactions;
+
+  //       console.log("Amount paid:", data.data[depositAddress].address.balance);
+
+  //       console.log(`Fetched ${fetchedTransactions.length} transactions from Blockchair for ${depositAddress} at offset ${offset}`);
+  //       console.log(fetchedTransactions);
+
+  //       if (fetchedTransactions.length === 0) {
+  //         break; // No more transactions
+  //       }
+
+  //       // Filter transactions from the last 24 hours
+  //       const recentTransactions = fetchedTransactions.filter(tx => {
+  //         const txDate = new Date(tx.time); // Blockchair provides 'time' as a string in ISO format
+  //         return txDate >= oneHourAgo;
+  //       });
+
+  //       allTransactions.push(...recentTransactions);
+
+  //       // If we got fewer than the limit, it means we've reached the end of recent transactions
+  //       if (fetchedTransactions.length < limit || recentTransactions.length < fetchedTransactions.length) {
+  //         break;
+  //       }
+
+  //       offset += limit;
+  //     } catch (error) {
+  //       console.error(`Error fetching transactions from Blockchair for ${depositAddress}:`, error.message);
+  //       // Handle API errors (e.g., rate limits, invalid address, network issues)
+  //       // You might want to throw an error here or return an empty array, depending on your error handling strategy
+  //       break;
+  //     }
+  //   }
+  //   return allTransactions;
+  // }
+
+
+  // // --- Helper function to fetch all transactions for an address and filter by date ---
+  // async function getAllTransactionsForLastHour(depositAddress, blockchain) {
+  //   let allTransactions = [];
+  //   let offset = 0;
+  //   const limit = 10; // Max per Blockchair API request
+  //   const oneHourAgo = new Date();
+  //   oneHourAgo.setHours(oneHourAgo.getHours() - 4); // Get date 4 hours ago
+
+  //   while (true) {
+  //     const url = `https://api.blockchair.com/${blockchain}/dashboards/address/${depositAddress}?transaction_details=true&limit=${limit}&offset=${offset}`;
+  //     try {
+  //       const response = await axios.get(url);
+  //       const data = response.data;
+
+  //       // Ensure data and transactions exist and are in the expected format
+  //       if (!data || !data.data || !data.data[depositAddress] || !data.data[depositAddress].transactions) {
+  //         console.warn(`Blockchair API response for ${depositAddress} was incomplete or empty.`);
+  //         break;
+  //       }
+
+  //       const fetchedTransactions = data.data[depositAddress].transactions;
+
+  //       console.log("Current balance:", data.data[depositAddress].address.balance / 100000000, blockchain.toUpperCase());
+
+  //       console.log(`Fetched ${fetchedTransactions.length} transactions from Blockchair for ${depositAddress} at offset ${offset}`);
+
+  //       if (fetchedTransactions.length === 0) {
+  //         break; // No more transactions
+  //       }
+
+  //       // Filter transactions from the last 4 hours
+  //       const recentTransactions = fetchedTransactions.filter(tx => {
+  //         const txDate = new Date(tx.time);
+  //         return txDate >= oneHourAgo;
+  //       });
+
+  //       allTransactions.push(...recentTransactions);
+
+  //       // If we got fewer than the limit, break
+  //       if (fetchedTransactions.length < limit || recentTransactions.length < fetchedTransactions.length) {
+  //         break;
+  //       }
+
+  //       offset += limit;
+  //     } catch (error) {
+  //       console.error(`Error fetching transactions from Blockchair for ${depositAddress}:`, error.message);
+  //       break;
+  //     }
+  //   }
+  //   return allTransactions;
+  // }
+
+  // // --- NEW: Function to get detailed transaction info including amount received ---
+  // async function getTransactionDetails(txHash, depositAddress, blockchain) {
+  //   try {
+  //     const url = `https://api.blockchair.com/${blockchain}/dashboards/transaction/${txHash}`;
+  //     const response = await axios.get(url);
+  //     const txData = response.data.data[txHash];
+
+  //     if (!txData) {
+  //       console.error(`No transaction data found for ${txHash}`);
+  //       return null;
+  //     }
+
+  //     // Find outputs that go to our deposit address
+  //     const receivedOutputs = txData.outputs.filter(output =>
+  //       output.recipient === depositAddress
+  //     );
+
+  //     // Calculate total amount received
+  //     const totalReceived = receivedOutputs.reduce((sum, output) =>
+  //       sum + output.value, 0
+  //     );
+
+  //     // Convert satoshis to main currency (LTC/BTC)
+  //     const amountInCrypto = totalReceived / 100000000;
+
+  //     return {
+  //       hash: txHash,
+  //       time: txData.transaction.time,
+  //       block: txData.transaction.block_id,
+  //       confirmations: txData.transaction.confirmations || 0,
+  //       amountReceived: amountInCrypto,
+  //       amountReceivedSatoshis: totalReceived,
+  //       outputs: receivedOutputs
+  //     };
+  //   } catch (error) {
+  //     console.error(`Error fetching transaction details for ${txHash}:`, error.message);
+  //     return null;
+  //   }
+  // }
+
+  // // Main transaction checking function (adapted for this project)
+  // async function checkTransaction() {
+  //   // Use userDetails and state instead of form
+  //   const transactionId = userDetails.transactionId?.trim();
+  //   const walletAddr = userDetails.walletAddress?.trim();
+  //   const amt = parseFloat(amount);
+  //   const curr = currency;
+
+  //   try {
+  //     // Validate inputs
+  //     if (!transactionId || !walletAddr || !amt || !curr) {
+  //       throw new Error('Please fill in all required fields');
+  //     }
+
+  //     // Check if the wallet address matches the expected deposit address
+  //     const depositInfo = depositWalletAddressMap[curr];
+  //     if (!depositInfo) {
+  //       throw new Error('Unsupported cryptocurrency');
+  //     }
+
+  //     // NOTE: In this project, the user is supposed to enter the address they sent FROM,
+  //     // so we do NOT want to check if it matches our deposit address.
+  //     // If you want to check that they did NOT enter our deposit address by mistake:
+  //     if (walletAddr === depositInfo.address) {
+  //       setTransactionStatus('failed');
+  //       setValidationMessage(
+  //         `The wallet address you entered is our deposit address. Please enter the address you sent FROM.`
+  //       );
+  //       return;
+  //     }
+
+  //     // Get current crypto rate
+  //     const currentRate = rate;
+
+  //     console.log(`\n=== Checking payments to ${depositInfo.address} ===\n`);
+
+  //     // replace with actual API calls if available)
+  //     const transactions = await getAllTransactionsForLastHour(walletAddr, depositInfo.blockchain);
+  //     const isValid = transactions.some(tx => tx.hash === transactionId);
+  //     // const transaction = transactions.find(tx => tx.hash === transactionId);
+
+  //     console.log(`\nFound ${transactions.length} recent transaction(s)\n`);
+
+  //     // console.log("Possible transaction:", transaction);
+
+  //     for (const tx of transactions) {
+  //       const details = await getTransactionDetails(tx.hash, walletAddr, depositInfo.blockchain);
+  //       // const details = await getTransactionDetails(transaction.hash, walletAddr, depositInfo.blockchain);
+  //       if (details) {
+  //         console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+  //         console.log(`Transaction Hash: ${details.hash}`);
+  //         console.log(`Time: ${details.time}`);
+  //         console.log(`Confirmations: ${details.confirmations}`);
+  //         console.log(`Amount Received: ${details.amountReceived} ${blockchain.toUpperCase()}`);
+  //         console.log(`Amount (Satoshis): ${details.amountReceivedSatoshis}`);
+
+  //         // Check if amount matches expected
+  //         if (expectedAmount) {
+  //           const matches = Math.abs(details.amountReceived - expectedAmount) < 0.00000001;
+  //           console.log(`Expected Amount: ${expectedAmount} ${blockchain.toUpperCase()}`);
+  //           console.log(`Amount Match: ${matches ? '✅ YES' : '❌ NO'}`);
+  //         }
+
+  //         console.log(`Block Explorer: https://blockchair.com/${blockchain}/transaction/${details.hash}`);
+  //         console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
+  //       }
+  //     }
+
+  //     if (isValid) {
+  //       setTransactionStatus('confirmed');
+  //       setValidationMessage(
+  //         `Transaction successfully verified on the ${curr} blockchain.`
+  //       );
+  //     } else {
+  //       setTransactionStatus('failed');
+  //       setValidationMessage(
+  //         'Unable to verify transaction on the blockchain. Please check your transaction ID.'
+  //       );
+  //     }
+
+  //     return isValid;
+  //   } catch (error) {
+  //     setTransactionStatus('failed');
+  //     setValidationMessage(error.message || 'Verification error');
+  //   }
+  // }
+
+
+  // --- Helper function to fetch all transactions for an address and filter by date ---
+async function getAllTransactionsForLastHour(depositAddress, blockchain) {
+  let allTransactions = [];
+  let offset = 0;
+  const limit = 10;
+  const oneHourAgo = new Date();
+  oneHourAgo.setHours(oneHourAgo.getHours() - 4); // Get date 4 hours ago
+
+  while (true) {
+    const url = `https://api.blockchair.com/${blockchain}/dashboards/address/${depositAddress}?transaction_details=true&limit=${limit}&offset=${offset}`;
+    try {
+      const response = await axios.get(url);
+      const data = response.data;
+
+      if (!data || !data.data || !data.data[depositAddress] || !data.data[depositAddress].transactions) {
+        console.warn(`Blockchair API response for ${depositAddress} was incomplete or empty.`);
+        break;
+      }
+
+      const fetchedTransactions = data.data[depositAddress].transactions;
+
+      console.log("Current balance:", data.data[depositAddress].address.balance / 100000000, blockchain.toUpperCase());
+      console.log(`Fetched ${fetchedTransactions.length} transactions from Blockchair for ${depositAddress} at offset ${offset}`);
+
+      if (fetchedTransactions.length === 0) {
+        break;
+      }
+
+      // Filter transactions from the last 4 hours
+      const recentTransactions = fetchedTransactions.filter(tx => {
+        const txDate = new Date(tx.time);
+        return txDate >= oneHourAgo;
+      });
+
+      allTransactions.push(...recentTransactions);
+
+      if (fetchedTransactions.length < limit || recentTransactions.length < fetchedTransactions.length) {
+        break;
+      }
+
+      offset += limit;
+    } catch (error) {
+      console.error(`Error fetching transactions from Blockchair for ${depositAddress}:`, error.message);
+      break;
+    }
+  }
+  return allTransactions;
+}
+
+// --- Function to get detailed transaction info including amount received ---
+async function getTransactionDetails(txHash, depositAddress, blockchain) {
+  try {
+    const url = `https://api.blockchair.com/${blockchain}/dashboards/transaction/${txHash}`;
+    const response = await axios.get(url);
+    const txData = response.data.data[txHash];
+
+    if (!txData) {
+      console.error(`No transaction data found for ${txHash}`);
+      return null;
+    }
+
+    // Find outputs that go to our deposit address
+    const receivedOutputs = txData.outputs.filter(output =>
+      output.recipient === depositAddress
+    );
+
+    // Calculate total amount received
+    const totalReceived = receivedOutputs.reduce((sum, output) =>
+      sum + output.value, 0
+    );
+
+    // Convert satoshis to main currency (LTC/BTC)
+    const amountInCrypto = totalReceived / 100000000;
+
+    // Find inputs to determine sender addresses
+    const senderAddresses = txData.inputs.map(input => input.recipient).filter(Boolean);
+
+    return {
+      hash: txHash,
+      time: txData.transaction.time,
+      block: txData.transaction.block_id,
+      confirmations: txData.transaction.confirmations || 0,
+      amountReceived: amountInCrypto,
+      amountReceivedSatoshis: totalReceived,
+      senderAddresses: senderAddresses,
+      outputs: receivedOutputs
+    };
+  } catch (error) {
+    console.error(`Error fetching transaction details for ${txHash}:`, error.message);
+    return null;
+  }
+}
+
+// Main transaction checking function
+async function checkTransaction() {
+  const transactionId = userDetails.transactionId?.trim();
+  const senderWalletAddr = userDetails.walletAddress?.trim(); // User's sending wallet
+  const expectedAmount = parseFloat(amount);
+  const curr = currency;
+
+  try {
+    // Validate inputs
+    if (!transactionId || !senderWalletAddr || !expectedAmount || !curr) {
+      throw new Error('Please fill in all required fields');
+    }
+
+    // Get deposit info for this currency
+    const depositInfo = depositWalletAddressMap[curr];
+    if (!depositInfo) {
+      throw new Error('Unsupported cryptocurrency');
+    }
+
+    // Check if user entered our deposit address by mistake
+    if (senderWalletAddr === depositInfo.address) {
+      setTransactionStatus('failed');
+      setValidationMessage(
+        `The wallet address you entered is our deposit address. Please enter the address you sent FROM.`
+      );
+      return false;
+    }
+
+    console.log(`\n=== Verifying Payment ===`);
+    console.log(`Checking transactions to: ${depositInfo.address}`);
+    console.log(`Expected from: ${senderWalletAddr}`);
+    console.log(`Transaction ID: ${transactionId}`);
+    console.log(`Expected amount: ${expectedAmount} ${curr}\n`);
+
+    // CRITICAL FIX: Check transactions to YOUR deposit address, not user's wallet
+    const transactions = await getAllTransactionsForLastHour(
+      depositInfo.address,  // Check YOUR deposit address
+      depositInfo.blockchain
+    );
+
+    console.log(`\nFound ${transactions.length} recent transaction(s) to deposit address\n`);
+
+    // Find the specific transaction by hash
+    const matchingTx = transactions.find(tx => tx.hash === transactionId);
+
+    if (!matchingTx) {
+      setTransactionStatus('failed');
+      setValidationMessage(
+        `Transaction ${transactionId} not found in recent transactions to our deposit address.`
+      );
+      return false;
+    }
+
+    // Get detailed transaction info
+    const details = await getTransactionDetails(
+      matchingTx.hash, 
+      depositInfo.address,  // Check amount received at YOUR address
+      depositInfo.blockchain
+    );
+
+    if (!details) {
+      setTransactionStatus('failed');
+      setValidationMessage('Unable to fetch transaction details.');
+      return false;
+    }
+
+    // Display transaction details
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+    console.log(`Transaction Hash: ${details.hash}`);
+    console.log(`Time: ${details.time}`);
+    console.log(`Confirmations: ${details.confirmations}`);
+    console.log(`Amount Received: ${details.amountReceived} ${curr}`);
+    console.log(`Sender Address(es): ${details.senderAddresses.join(', ')}`);
+    
+    // Verify the sender wallet matches
+    const senderMatches = details.senderAddresses.includes(senderWalletAddr);
+    console.log(`Sender Match: ${senderMatches ? '✅ YES' : '❌ NO'}`);
+
+    // Verify the amount matches (with small tolerance for rounding)
+    const amountMatches = Math.abs(details.amountReceived - expectedAmount) < 0.00000001;
+    console.log(`Expected Amount: ${expectedAmount} ${curr}`);
+    console.log(`Amount Match: ${amountMatches ? '✅ YES' : '❌ NO'}`);
+
+    // Check minimum confirmations (optional - adjust as needed)
+    const hasEnoughConfirmations = details.confirmations >= 1; // At least 1 confirmation
+    console.log(`Confirmations Check: ${hasEnoughConfirmations ? '✅ YES' : '⚠️ UNCONFIRMED'}`);
+
+    console.log(`Block Explorer: https://blockchair.com/${depositInfo.blockchain}/transaction/${details.hash}`);
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
+
+    // Verify all conditions
+    if (senderMatches && amountMatches && hasEnoughConfirmations) {
+      setTransactionStatus('confirmed');
+      setValidationMessage(
+        `✅ Payment verified! Received ${details.amountReceived} ${curr} with ${details.confirmations} confirmation(s).`
+      );
+      return true;
+    } else {
+      // Provide specific failure reason
+      let reason = '';
+      if (!senderMatches) reason = 'Sender address does not match.';
+      else if (!amountMatches) reason = `Amount mismatch. Received: ${details.amountReceived} ${curr}, Expected: ${expectedAmount} ${curr}`;
+      else if (!hasEnoughConfirmations) reason = 'Transaction not yet confirmed on blockchain.';
+
+      setTransactionStatus('failed');
+      setValidationMessage(`Verification failed: ${reason}`);
+      return false;
+    }
+
+  } catch (error) {
+    console.error('Transaction verification error:', error);
+    setTransactionStatus('failed');
+    setValidationMessage(error.message || 'Verification error');
+    return false;
+  }
+}
 
   const handleValidateTransaction = async () => {
     if (!userDetails.transactionId.trim()) {
@@ -355,22 +852,19 @@ export default function Purchase() {
     setValidationMessage('Checking transaction on blockchain...');
 
     try {
-      // Simulate API call to validate transaction
-      // In real implementation, this would check the blockchain
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate API delay
-      
-      // Simulate different outcomes based on transaction ID length
-      const isValid = userDetails.transactionId.length > 10;
-      
+      // API call to validate transaction
+      // Implementation would check the blockchain
+
+      const isValid = await checkTransaction();
+
       if (isValid) {
-        setTransactionStatus('confirmed');
-        setValidationMessage('Transaction confirmed! Your credits will be added to your account within 10 minutes.');
         success('Transaction validated successfully!');
+        handleOrderSubmit(new Event('submit')); // Proceed to submit order
+        handleScreenshotUploadStep2();
       } else {
-        setTransactionStatus('failed');
-        setValidationMessage('Transaction not found or invalid. Please check your transaction ID and try again.');
-        error('Transaction validation failed');
+        error('Transaction validation failed. Please check the details and try again.');
       }
+
     } catch (err) {
       setTransactionStatus('failed');
       setValidationMessage('Error validating transaction. Please try again later.');
@@ -381,10 +875,11 @@ export default function Purchase() {
   const getExpectedWaitTime = (currency) => {
     const waitTimes = {
       BTC: '10-30 minutes (1-3 confirmations)',
-      ETH: '5-15 minutes (12-35 confirmations)', 
+      ETH: '5-15 minutes (12-35 confirmations)',
       LTC: '5-15 minutes (6 confirmations)',
       SOL: '1-3 minutes (32 confirmations)',
-      XMR: '20-40 minutes (10 confirmations)'
+      // XMR: '20-40 minutes (10 confirmations)',
+      // XRP: '5-10 minutes (1 confirmation)'
     };
     return waitTimes[currency] || '10-30 minutes';
   };
@@ -409,7 +904,7 @@ export default function Purchase() {
             <Typography variant="h4">Step 1</Typography>
             <Typography variant="h6">Choose Purchase Currency</Typography>
             <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>Select your preferred cryptocurrency to purchase credits.</Typography>
-            
+
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
@@ -421,7 +916,7 @@ export default function Purchase() {
                 { code: 'ETH', name: 'Ethereum', icon: 'Ξ', color: '#627eea' },
                 { code: 'LTC', name: 'Litecoin', icon: 'Ł', color: '#345d9d' },
                 { code: 'SOL', name: 'Solana', icon: '◎', color: '#9945ff' },
-                { code: 'XMR', name: 'Monero', icon: 'ɱ', color: '#ff6600' }
+                // { code: 'XMR', name: 'Monero', icon: 'ɱ', color: '#ff6600' }
               ].map((crypto) => (
                 <div
                   key={crypto.code}
@@ -487,7 +982,7 @@ export default function Purchase() {
             <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
               Select an amount of credits to purchase. Current selection: <strong>{parseInt(amount).toLocaleString()} credits</strong>
             </Typography>
-            
+
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -505,9 +1000,9 @@ export default function Purchase() {
                 <div
                   key={index}
                   style={{
-                    background: package_.popular 
-                      ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
-                      : amount == package_.amount 
+                    background: package_.popular
+                      ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                      : amount == package_.amount
                         ? 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)'
                         : 'rgba(255, 255, 255, 0.1)',
                     color: package_.popular || amount == package_.amount ? 'white' : 'rgba(255, 255, 255, 0.9)',
@@ -546,7 +1041,7 @@ export default function Purchase() {
                       MOST POPULAR
                     </div>
                   )}
-                  
+
                   {amount == package_.amount && (
                     <div style={{
                       position: 'absolute',
@@ -562,7 +1057,7 @@ export default function Purchase() {
                       SELECTED
                     </div>
                   )}
-                  
+
                   <div style={{
                     fontSize: '32px',
                     fontWeight: 'bold',
@@ -626,7 +1121,7 @@ export default function Purchase() {
 
             {errorMessage && <p style={styles.errorMessage}>{errorMessage}</p>}
             {message && <p style={styles.successMessage}>{message}</p>}
-            
+
             <div style={styles.walletInfo}>
               {/* Currency Display Card */}
               <div style={{
@@ -638,20 +1133,22 @@ export default function Purchase() {
                 color: 'white'
               }}>
                 <div style={{ fontSize: '3em', marginBottom: '10px' }}>
-                  {{ BTC: '₿', ETH: 'Ξ', LTC: 'Ł', SOL: '◎', XMR: 'ɱ' }[currency]}
+                  {/* {{ BTC: '₿', ETH: 'Ξ', LTC: 'Ł', SOL: '◎', XMR: 'ɱ' }[currency]} */}
+                  {{ BTC: '₿', ETH: 'Ξ', LTC: 'Ł', SOL: '◎' }[currency]}
                 </div>
                 <h3 style={{ margin: '10px 0', fontSize: '24px' }}>
-                  {{ BTC: 'Bitcoin', ETH: 'Ethereum', LTC: 'Litecoin', SOL: 'Solana', XMR: 'Monero' }[currency]} ({currency})
+                  {/* {{ BTC: 'Bitcoin', ETH: 'Ethereum', LTC: 'Litecoin', SOL: 'Solana', XMR: 'Monero' }[currency]} ({currency}) */}
+                  {{ BTC: 'Bitcoin', ETH: 'Ethereum', LTC: 'Litecoin', SOL: 'Solana' }[currency]} ({currency})
                 </h3>
                 <div style={{ fontSize: '18px', opacity: 0.9 }}>
                   Current Rate: <strong>${rate ? rate.toLocaleString() : '...'}</strong> USD
                 </div>
               </div>
 
-              <div style={{ 
-                backgroundColor: '#1a1a1a', 
-                padding: '20px', 
-                borderRadius: '12px', 
+              <div style={{
+                backgroundColor: '#1a1a1a',
+                padding: '20px',
+                borderRadius: '12px',
                 border: '2px solid #ffd700',
                 marginBottom: '20px'
               }}>
@@ -661,23 +1158,23 @@ export default function Purchase() {
                 <p style={{ marginBottom: '15px', textAlign: 'center' }}>
                   Please send <strong style={{ color: '#ffd700' }}>{cryptoAmount} {currency}</strong> to the following wallet address:
                 </p>
-                
+
                 <div style={styles.walletAddressContainer}>
-                  <p style={{...styles.walletAddress, fontSize: '18px', fontWeight: 'bold'}}>
+                  <p style={{ ...styles.walletAddress, fontSize: '18px', fontWeight: 'bold' }}>
                     {cryptoAmount} {currency}
                   </p>
                   <button style={styles.button} onClick={handleCopyAmount}>
                     Copy Amount
                   </button>
                 </div>
-                
+
                 <div style={styles.walletAddressContainer}>
                   <p style={styles.walletAddress}>{walletAddress}</p>
                   <button style={styles.button} onClick={handleCopyAddress}>
                     Copy Address
                   </button>
                 </div>
-                
+
                 <div style={{
                   backgroundColor: '#2a2a2a',
                   padding: '15px',
@@ -702,7 +1199,7 @@ export default function Purchase() {
             <Typography variant="h4">Step 4</Typography>
             <Typography variant="h6">Submit Transaction Details</Typography>
             <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
-              After sending the cryptocurrency, please fill out the form below to log your order. 
+              After sending the cryptocurrency, please fill out the form below to log your order.
               Fields marked with <span style={{ color: '#ff6b6b', fontWeight: 'bold' }}>*</span> are required.
             </Typography>
 
@@ -803,9 +1300,9 @@ export default function Purchase() {
                     style={{ ...styles.input, flex: 1 }}
                     placeholder="e.g., 12:15 PM"
                   />
-                  <button 
-                    type="button" 
-                    style={styles.time_button} 
+                  <button
+                    type="button"
+                    style={styles.time_button}
                     onClick={() => {
                       const currentTime = new Date();
                       let hours = currentTime.getHours();
@@ -910,7 +1407,7 @@ export default function Purchase() {
                     style={{ display: 'none' }}
                     id="transaction-screenshot-upload"
                     type="file"
-                    onChange={handleScreenshotUpload}
+                    onChange={handleScreenshotUploadStep1}
                   />
                   <label htmlFor="transaction-screenshot-upload">
                     <button
@@ -977,7 +1474,7 @@ export default function Purchase() {
                   </small>
                 </div>
               </div>
-
+              {/* 
               <div style={styles.buttonGroup}>
                 <button style={styles.log_button} type="submit">
                   Log Your Order
@@ -985,14 +1482,14 @@ export default function Purchase() {
                 <button style={styles.cancel_button} type="button" onClick={handleCancelOrder}>
                   Cancel Order
                 </button>
-              </div>
+              </div> */}
             </form>
 
             <Divider sx={{ my: 2 }} />
             <Typography variant="h4" data-step="5">Step 5</Typography>
             <Typography variant="h6">Transaction Status & Validation</Typography>
             <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
-              {orderSubmitted 
+              {orderSubmitted
                 ? 'Your order has been logged. Use the tools below to check your transaction status.'
                 : 'After submitting your order details, you can validate your transaction here.'
               }
@@ -1009,7 +1506,7 @@ export default function Purchase() {
               <h4 style={{ color: '#667eea', marginBottom: '20px', textAlign: 'center' }}>
                 Transaction Validation
               </h4>
-              
+
               {/* Expected Wait Time */}
               <div style={{
                 backgroundColor: '#2a2a2a',
@@ -1063,12 +1560,12 @@ export default function Purchase() {
                   padding: '15px',
                   borderRadius: '8px',
                   textAlign: 'center',
-                  backgroundColor: transactionStatus === 'confirmed' ? '#1b5e20' : 
-                                  transactionStatus === 'failed' ? '#b71c1c' : '#1a1a1a',
-                  border: `1px solid ${transactionStatus === 'confirmed' ? '#4caf50' : 
-                                      transactionStatus === 'failed' ? '#f44336' : '#667eea'}`,
-                  color: transactionStatus === 'confirmed' ? '#81c784' : 
-                         transactionStatus === 'failed' ? '#ef5350' : '#90caf9'
+                  backgroundColor: transactionStatus === 'confirmed' ? '#1b5e20' :
+                    transactionStatus === 'failed' ? '#b71c1c' : '#1a1a1a',
+                  border: `1px solid ${transactionStatus === 'confirmed' ? '#4caf50' :
+                    transactionStatus === 'failed' ? '#f44336' : '#667eea'}`,
+                  color: transactionStatus === 'confirmed' ? '#81c784' :
+                    transactionStatus === 'failed' ? '#ef5350' : '#90caf9'
                 }}>
                   <p style={{ margin: '0', fontSize: '16px', fontWeight: '500' }}>
                     {transactionStatus === 'confirmed' && '✅ '}

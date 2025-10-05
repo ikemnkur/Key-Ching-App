@@ -31,81 +31,81 @@ export default function App() {
   // example user data for testing
   // localStorage.setItem('userdata', JSON.stringify({"id":"UU4YFJICVO","loginStatus":true,"lastLogin":null,"accountType":"buyer","username":"ikemnkur","email":"ikemnkur@gmail.com","firstName":"Ikem","lastName":"Nkurumeh","phoneNumber":"","birthDate":"2000-03-02","encryptionKey":"enc_key_1759455609939","credits":100,"reportCount":0,"isBanned":false,"banReason":"","banDate":null,"banDuration":null,"createdAt":1759455609939,"updatedAt":1759455609939,"twoFactorEnabled":false,"twoFactorSecret":"","recoveryCodes":[],"profilePicture":"https://i.pravatar.cc/150?img=6","bio":"","socialLinks":{}}));
 
-  const [userData, setUserData] = useState(
-    localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')) : {
-      id: '',
-      loginStatus: false,
-      lastLogin: null,
-      accountType: '',
-      username: '',
-      email: '',
-      firstName: '',
-      lastName: '',
-      phoneNumber: '',
-      birthDate: '',
-      encryptionKey: '',
-      credits: 0,
-      reportCount: 0,
-      isBanned: false,
-      banReason: '',
-      banDate: null,
-      banDuration: null,
-      createdAt: null,
-      updatedAt: null,
-      twoFactorEnabled: false,
-      twoFactorSecret: '',
-      recoveryCodes: [],
-      profilePicture: '',
-      bio: '',
-      socialLinks: {}
-    }
-  );
+  // const [userData, setUserData] = useState(
+  //   localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')) : {
+  //     id: '',
+  //     loginStatus: false,
+  //     lastLogin: null,
+  //     accountType: '',
+  //     username: '',
+  //     email: '',
+  //     firstName: '',
+  //     lastName: '',
+  //     phoneNumber: '',
+  //     birthDate: '',
+  //     encryptionKey: '',
+  //     credits: 0,
+  //     reportCount: 0,
+  //     isBanned: false,
+  //     banReason: '',
+  //     banDate: null,
+  //     banDuration: null,
+  //     createdAt: null,
+  //     updatedAt: null,
+  //     twoFactorEnabled: false,
+  //     twoFactorSecret: '',
+  //     recoveryCodes: [],
+  //     profilePicture: '',
+  //     bio: '',
+  //     socialLinks: {}
+  //   }
+  // );
 
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [openSnackbar, setOpenSnackbar] = useState(false);
+  // const [snackbarMessage, setSnackbarMessage] = useState('');
+  // const [openSnackbar, setOpenSnackbar] = useState(false);
   // const navigate = useNavigate();
 
   // Function to fetch user profile from server
-  const fetchUserProfile = async () => {
-    const storedUserData = JSON.parse(localStorage.getItem("userdata") || '{}');
-    const username = storedUserData.username || 'user_123';
+  // const fetchUserProfile = async () => {
+  //   const storedUserData = JSON.parse(localStorage.getItem("userdata") || '{}');
+  //   const username = storedUserData.username || 'user_123';
 
-    const response = await fetch('http://localhost:3001/api/userData');
-    if (!response.ok) throw new Error('Failed to fetch user data');
+  //   const response = await fetch('http://localhost:3001/api/userData');
+  //   if (!response.ok) throw new Error('Failed to fetch user data');
 
-    const allUsers = await response.json();
-    const currentUser = allUsers.find(user => user.username === username);
+  //   const allUsers = await response.json();
+  //   const currentUser = allUsers.find(user => user.username === username);
 
-    if (currentUser) {
-      return currentUser;
-    } else {
-      throw new Error('User not found');
-    }
-  }
+  //   if (currentUser) {
+  //     return currentUser;
+  //   } else {
+  //     throw new Error('User not found');
+  //   }
+  // }
 
 
-  // Load user profile from server
-  const loadUserProfile = async () => {
-    try {
-      const profile = await fetchUserProfile();
-      const updatedUserData = {
-        ...profile,
-        birthDate: profile.birthDate ? profile.birthDate.split('T')[0] : '',
-      };
-      setUserData(updatedUserData);
-      localStorage.setItem('userdata', JSON.stringify(updatedUserData));
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      setSnackbarMessage(error.response?.data?.message || 'Failed to load user profile. Please refresh or login again.');
-      if (error.response?.status === 401) {
-        setTimeout(() => navigate('/login'), 500);
-      }
-    }
-  };
+  // // Load user profile from server
+  // const loadUserProfile = async () => {
+  //   try {
+  //     const profile = await fetchUserProfile();
+  //     const updatedUserData = {
+  //       ...profile,
+  //       birthDate: profile.birthDate ? profile.birthDate.split('T')[0] : '',
+  //     };
+  //     setUserData(updatedUserData);
+  //     localStorage.setItem('userdata', JSON.stringify(updatedUserData));
+  //   } catch (error) {
+  //     console.error('Error fetching user profile:', error);
+  //     setSnackbarMessage(error.response?.data?.message || 'Failed to load user profile. Please refresh or login again.');
+  //     if (error.response?.status === 401) {
+  //       setTimeout(() => navigate('/login'), 500);
+  //     }
+  //   }
+  // };
 
   // Determine account type and login status, temporarily using localStorage
-  const accountType = userData.accountType || (localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).accountType : null); // 'buyer', 'seller', or null
-  const isLoggedIn = userData.loginStatus || (localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).loginStatus : false); // 'buyer', 'seller', or null
+  // const accountType = userData.accountType || (localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).accountType : null); // 'buyer', 'seller', or null
+  // const isLoggedIn = userData.loginStatus || (localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).loginStatus : false); // 'buyer', 'seller', or null
 
   return (
     <ThemeProvider theme={theme}>
@@ -115,49 +115,50 @@ export default function App() {
           <NavBar />
           <Routes>
             {/* Public Routes */}
-            {/* {!isLoggedIn && ( */}
+            {!(localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).loginStatus : false) && (
             <Route path="/login" element={<Auth isLogin={true} />} />
 
-            {/* )} */}
-            {!isLoggedIn && (
+            )} 
+            {!(localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).loginStatus : false) && (
               <Route path="/register" element={<Auth isLogin={false} />} />
             )}
             <Route path="/help" element={<HelpPage />} />
+            <Route path="/info" element={<Info />} />
 
             {/* Seller/ Buyer Routes */}
-            {/* {accountType === 'buyer' && ( */}
-            <>
-              <Route path="/unlock/:id" element={<Unlock />} />
-              {/* <Route path="/wallet" element={<Wallet />} /> */}
-              <Route path="/purchase" element={<Purchase />} />
-              <Route path="/your-keys" element={<YourKeys />} />
-              <Route path="/purchase-history" element={<PurchaseHistory />} />
-              <Route path="/account" element={<Account />} />
-            </>
-            {/* )} */}
-            {/* {accountType === 'seller' && ( */}
-            <>
-              <Route path="/earnings" element={<Earnings />} />
-              <Route path="/create-key" element={<CreateKey />} />
-              <Route path="/redeem" element={<Redeem />} />
-              <Route path="/listings" element={<Listings />} />
-            </>
-            {/* )}/ */}
+            {(localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).accountType : null) === 'buyer' && (
+              <>
+                <Route path="/unlock/:id" element={<Unlock />} />
+                {/* <Route path="/wallet" element={<Wallet />} /> */}
+                <Route path="/purchase" element={<Purchase />} />
+                <Route path="/your-keys" element={<YourKeys />} />
+                <Route path="/purchase-history" element={<PurchaseHistory />} />
+                <Route path="/account" element={<Account />} />
+              </>
+            )}
+            {(localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).accountType : null) === 'seller' && (
+              <>
+                <Route path="/earnings" element={<Earnings />} />
+                <Route path="/create-key" element={<CreateKey />} />
+                <Route path="/redeem" element={<Redeem />} />
+                <Route path="/listings" element={<Listings />} />
+                <Route path="/account" element={<Account />} />
+              </>
+            )}
 
             {/* Main Route */}
             {/* not logged in */}
-            {!isLoggedIn && (
+            {!(localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).loginStatus : false) && (
               <>
                 <Route path="/" element={<Info />} />
               </>
             )}
             {/* logged in */}
-            {isLoggedIn && (
+            {(localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).loginStatus : false) && (
               <Route path="/" element={<Main />} />
             )}
 
-
-
+            
           </Routes>
         </BrowserRouter>
       </ToastProvider>

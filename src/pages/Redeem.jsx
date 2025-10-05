@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { PhotoCamera } from '@mui/icons-material';
 import { Container, Stack, Typography, Card, CardContent, Divider, Skeleton } from '@mui/material';
 import api from '../api/client';
-import { uploadTransactionScreenshot } from '../api/api';
+// import { uploadTransactionScreenshot } from '../api/api';
 import { useToast } from '../contexts/ToastContext';
 
 export default function Redeem() {
@@ -73,7 +73,7 @@ export default function Redeem() {
 
   const load = async () => {
     try {
-      const { data } = await api.get('/wallet/balance');
+      const { data } = await api.get(`/api/wallet/balance/${ud.username}`);
       setBalance(data?.balance ?? 0);
     } catch (e) {
       console.error(e);
@@ -145,104 +145,104 @@ export default function Redeem() {
       });
   };
 
-  // Example function to upload file to backend:
-  const uploadToBackend = async (file) => {
-    const formData = new FormData();
-    formData.append('media', file);
+  // // Example function to upload file to backend:
+  // const uploadToBackend = async (file) => {
+  //   const formData = new FormData();
+  //   formData.append('media', file);
 
-    try {
-      // uploadMediaFiles should return the media link or an object with mediaLink property
-      const response = await uploadTransactionScreenshot(formData);
-      console.log('Transaction screenshot file uploaded:', response);
+  //   try {
+  //     // uploadMediaFiles should return the media link or an object with mediaLink property
+  //     const response = await uploadTransactionScreenshot(formData);
+  //     console.log('Transaction screenshot file uploaded:', response);
 
-      // If your backend returns { mediaLink: "..." }
-      if (response && response.url) {
-        return response.url;
-      }
-      // If your backend returns { mediaLink: "..." }
-      if (response && response.mediaLink) {
-        return response.mediaLink;
-      }
-      // If your backend returns the link directly
-      if (typeof response === 'string') {
-        return response;
-      }
-      throw new Error('Upload failed or invalid response');
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  };
+  //     // If your backend returns { mediaLink: "..." }
+  //     if (response && response.url) {
+  //       return response.url;
+  //     }
+  //     // If your backend returns { mediaLink: "..." }
+  //     if (response && response.mediaLink) {
+  //       return response.mediaLink;
+  //     }
+  //     // If your backend returns the link directly
+  //     if (typeof response === 'string') {
+  //       return response;
+  //     }
+  //     throw new Error('Upload failed or invalid response');
+  //   } catch (error) {
+  //     console.error(error);
+  //     throw error;
+  //   }
+  // };
 
-  // Enhanced screenshot upload handler
-  const handleScreenshotUpload = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  // // Enhanced screenshot upload handler
+  // const handleScreenshotUpload = async (event) => {
+  //   const file = event.target.files?.[0];
+  //   if (!file) return;
 
-    // File type validation
-    const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg'];
-    if (!allowedTypes.includes(file.type)) {
-      setFileError('Please upload only PNG or JPG files.');
-      setUploadedFile(null);
-      setFilePreview(null);
-      return;
-    }
+  //   // File type validation
+  //   const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg'];
+  //   if (!allowedTypes.includes(file.type)) {
+  //     setFileError('Please upload only PNG or JPG files.');
+  //     setUploadedFile(null);
+  //     setFilePreview(null);
+  //     return;
+  //   }
 
-    // File size validation (5MB limit)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      setFileError('File size must be less than 5MB.');
-      setUploadedFile(null);
-      setFilePreview(null);
-      return;
-    }
+  //   // File size validation (5MB limit)
+  //   const maxSize = 5 * 1024 * 1024; // 5MB
+  //   if (file.size > maxSize) {
+  //     setFileError('File size must be less than 5MB.');
+  //     setUploadedFile(null);
+  //     setFilePreview(null);
+  //     return;
+  //   }
 
-    // Clear any previous errors
-    setFileError('');
-    setUploadedFile(file);
+  //   // Clear any previous errors
+  //   setFileError('');
+  //   setUploadedFile(file);
 
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFilePreview(reader.result);
-    };
-    reader.readAsDataURL(file);
+  //   // Create preview
+  //   const reader = new FileReader();
+  //   reader.onloadend = () => {
+  //     setFilePreview(reader.result);
+  //   };
+  //   reader.readAsDataURL(file);
 
-    // // Store file info for later use
-    // const fileInfo = {
-    //   name: file.name,
-    //   size: file.size,
-    //   type: file.type,
-    //   lastModified: file.lastModified,
-    //   timestamp: Date.now(),
-    //   userId: ud?.user_id || ud?.id || 'unknown'
-    // };
+  //   // // Store file info for later use
+  //   // const fileInfo = {
+  //   //   name: file.name,
+  //   //   size: file.size,
+  //   //   type: file.type,
+  //   //   lastModified: file.lastModified,
+  //   //   timestamp: Date.now(),
+  //   //   userId: ud?.user_id || ud?.id || 'unknown'
+  //   // };
 
-    // // In a real app, you would upload to backend here
-    // console.log('Screenshot uploaded:', fileInfo);
-    // setMessage('Screenshot uploaded successfully!');
+  //   // // In a real app, you would upload to backend here
+  //   // console.log('Screenshot uploaded:', fileInfo);
+  //   // setMessage('Screenshot uploaded successfully!');
 
-    // Upload logic (if you want to upload immediately)
-    const formData = new FormData();
-    formData.append('screenshot', file);
-    formData.append('username', ud.username);
-    formData.append('userId', ud.user_id || ud.id);
-    formData.append('time', new Date().toISOString().split('T')[1]);
-    formData.append('date', new Date().toISOString());
+  //   // Upload logic (if you want to upload immediately)
+  //   const formData = new FormData();
+  //   formData.append('screenshot', file);
+  //   formData.append('username', ud.username);
+  //   formData.append('userId', ud.user_id || ud.id);
+  //   formData.append('time', new Date().toISOString().split('T')[1]);
+  //   formData.append('date', new Date().toISOString());
 
-    try {
-      let mediaLink;
+  //   try {
+  //     let mediaLink;
 
-      mediaLink = await uploadToBackend(file); // server returns { mediaLink }
-      formData.append('mediaLink', mediaLink);
+  //     mediaLink = await uploadToBackend(file); // server returns { mediaLink }
+  //     formData.append('mediaLink', mediaLink);
 
-      setMessage('Screenshot uploaded successfully!');
+  //     setMessage('Screenshot uploaded successfully!');
 
-    } catch (error) {
-      console.error('API - Error uploading screenshot:', error);
-      setFileError('An error occurred while uploading the image.');
-    }
-  };
+  //   } catch (error) {
+  //     console.error('API - Error uploading screenshot:', error);
+  //     setFileError('An error occurred while uploading the image.');
+  //   }
+  // };
 
   // Function to remove uploaded file
   const handleRemoveFile = () => {
@@ -386,7 +386,7 @@ export default function Redeem() {
             ) : (
               <Typography variant="h3" sx={{ fontWeight: 800, color: 'primary.main' }}>{balance} credits</Typography>
             )}
-            
+
             <Divider sx={{ my: 2 }} />
             <Typography variant="h5" gutterBottom>How It Works</Typography>
             <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
@@ -395,7 +395,7 @@ export default function Redeem() {
 
             {/* <div style={styles.container}> */}
 
-          <Divider sx={{ my: 2 }} />
+            <Divider sx={{ my: 2 }} />
             <Typography variant="h4">Step 1</Typography>
             <Typography variant="h6">Choose Redeem Currency</Typography>
             <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>Select your preferred cryptocurrency to redeem credits.</Typography>
@@ -539,7 +539,7 @@ export default function Redeem() {
               }}
             />
           </CardContent>
-        
+
           <CardContent>
             {/* <Typography variant="h5" gutterBottom>How It Works</Typography>
             <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
@@ -549,165 +549,165 @@ export default function Redeem() {
             <div style={styles.container}>
 
           <Divider sx={{ my: 2 }} /> */}
-           <Divider sx={{ my: 2 }} />
-          <Typography variant="h4" data-step="3">Step 3</Typography>
-          <Typography variant="h6">Send Cryptocurrency</Typography>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="h4" data-step="3">Step 3</Typography>
+            <Typography variant="h6">Send Cryptocurrency</Typography>
 
 
-          {errorMessage && <p style={styles.errorMessage}>{errorMessage}</p>}
-          {message && <p style={styles.successMessage}>{message}</p>}
+            {errorMessage && <p style={styles.errorMessage}>{errorMessage}</p>}
+            {message && <p style={styles.successMessage}>{message}</p>}
 
-          <div style={styles.walletInfo}>
-            {/* Currency Display Card */}
-            <div style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '20px',
-              textAlign: 'center',
-              color: 'white'
-            }}>
-              <div style={{ fontSize: '3em', marginBottom: '10px' }}>
-                {{ BTC: '₿', ETH: 'Ξ', LTC: 'Ł', SOL: '◎', XMR: 'ɱ' }[currency]}
+            <div style={styles.walletInfo}>
+              {/* Currency Display Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                padding: '20px',
+                borderRadius: '12px',
+                marginBottom: '20px',
+                textAlign: 'center',
+                color: 'white'
+              }}>
+                <div style={{ fontSize: '3em', marginBottom: '10px' }}>
+                  {{ BTC: '₿', ETH: 'Ξ', LTC: 'Ł', SOL: '◎', XMR: 'ɱ' }[currency]}
+                </div>
+                <h3 style={{ margin: '10px 0', fontSize: '24px' }}>
+                  {{ BTC: 'Bitcoin', ETH: 'Ethereum', LTC: 'Litecoin', SOL: 'Solana', XMR: 'Monero' }[currency]} ({currency})
+                </h3>
+                <div style={{ fontSize: '18px', opacity: 0.9 }}>
+                  Current Rate: <strong>${rate ? rate.toLocaleString() : '...'}</strong> USD
+                </div>
               </div>
-              <h3 style={{ margin: '10px 0', fontSize: '24px' }}>
-                {{ BTC: 'Bitcoin', ETH: 'Ethereum', LTC: 'Litecoin', SOL: 'Solana', XMR: 'Monero' }[currency]} ({currency})
-              </h3>
-              <div style={{ fontSize: '18px', opacity: 0.9 }}>
-                Current Rate: <strong>${rate ? rate.toLocaleString() : '...'}</strong> USD
-              </div>
-            </div>
 
-            <div style={{
-              backgroundColor: '#1a1a1a',
-              padding: '20px',
-              borderRadius: '12px',
-              border: '2px solid #ffd700',
-              marginBottom: '20px'
-            }}>
-              {/* <h4 style={{ color: '#ffd700', marginBottom: '15px', textAlign: 'center' }}>
+              <div style={{
+                backgroundColor: '#1a1a1a',
+                padding: '20px',
+                borderRadius: '12px',
+                border: '2px solid #ffd700',
+                marginBottom: '20px'
+              }}>
+                {/* <h4 style={{ color: '#ffd700', marginBottom: '15px', textAlign: 'center' }}>
                   Payment Instructions
                 </h4>
                 <p style={{ marginBottom: '15px', textAlign: 'center' }}>
                   Please send <strong style={{ color: '#ffd700' }}>{cryptoAmount} {currency}</strong> to the following wallet address:
                 </p>
                  */}
-              <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
-                You should receive the exact amount {cryptoAmountRaw.toFixed(6)} (1% margin of error) of {currency} from the wallet address below.
-              </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
+                  You should receive the exact amount {cryptoAmountRaw.toFixed(6)} (1% margin of error) of {currency} from the wallet address below.
+                </Typography>
 
-              <div style={styles.header}>
-                <h2>You will be receiving: {parseInt(amount).toLocaleString()} Credits</h2>
-                <h3> Our Cut (Fee): {((parseInt(amount) * 0.1) || 0).toLocaleString()} Credits</h3>
-                <h3>Total: ${((parseInt(amount) / 1000) || 0).toFixed(2)} USD</h3>
-              </div>
+                <div style={styles.header}>
+                  <h2>You will be receiving: {parseInt(amount).toLocaleString()} Credits</h2>
+                  <h3> Our Cut (Fee): {((parseInt(amount) * 0.1) || 0).toLocaleString()} Credits</h3>
+                  <h3>Total: ${((parseInt(amount) / 1000) || 0).toFixed(2)} USD</h3>
+                </div>
 
-              <div style={styles.walletAddressContainer}>
-                <p style={{ ...styles.walletAddress, fontSize: '18px', fontWeight: 'bold' }}>
-                  {cryptoAmount} {currency}
-                </p>
-                <button style={styles.button} onClick={handleCopyAmount}>
-                  Copy Amount
-                </button>
-              </div>
+                <div style={styles.walletAddressContainer}>
+                  <p style={{ ...styles.walletAddress, fontSize: '18px', fontWeight: 'bold' }}>
+                    {cryptoAmount} {currency}
+                  </p>
+                  <button style={styles.button} onClick={handleCopyAmount}>
+                    Copy Amount
+                  </button>
+                </div>
 
-              <div style={styles.walletAddressContainer}>
-                <p style={styles.walletAddress}>{walletAddress}</p>
-                <button style={styles.button} onClick={handleCopyAddress}>
-                  Copy Address
-                </button>
-              </div>
+                <div style={styles.walletAddressContainer}>
+                  <p style={styles.walletAddress}>{walletAddress}</p>
+                  <button style={styles.button} onClick={handleCopyAddress}>
+                    Copy Address
+                  </button>
+                </div>
 
-              <div style={{
-                backgroundColor: '#2a2a2a',
-                padding: '15px',
-                borderRadius: '8px',
-                marginTop: '15px',
-                border: '1px solid #444'
-              }}>
-                <p style={{ fontSize: '14px', margin: '5px 0' }}>
-                  <strong>Network:</strong> {depositWalletAddressMap[currency]?.blockchain || 'Unknown'}
-                </p>
-                <p style={{ fontSize: '14px', margin: '5px 0' }}>
-                  <strong>Rate:</strong> 1 {currency} = ${rate} USD ≈ {(1000 * rate).toLocaleString()} Credits
-                </p>
-                <p style={{ fontSize: '12px', margin: '5px 0', opacity: 0.7 }}>
-                  Maximum Redemption: 100,000 credits per transaction per day
-                </p>
-                 <p style={{ fontSize: '12px', margin: '5px 0', opacity: 0.7 }}>
-                  Minimum Redemption: 10,000 credits per transaction (10 USD)
-                </p>
+                <div style={{
+                  backgroundColor: '#2a2a2a',
+                  padding: '15px',
+                  borderRadius: '8px',
+                  marginTop: '15px',
+                  border: '1px solid #444'
+                }}>
+                  <p style={{ fontSize: '14px', margin: '5px 0' }}>
+                    <strong>Network:</strong> {depositWalletAddressMap[currency]?.blockchain || 'Unknown'}
+                  </p>
+                  <p style={{ fontSize: '14px', margin: '5px 0' }}>
+                    <strong>Rate:</strong> 1 {currency} = ${rate} USD ≈ {(1000 * rate).toLocaleString()} Credits
+                  </p>
+                  <p style={{ fontSize: '12px', margin: '5px 0', opacity: 0.7 }}>
+                    Maximum Redemption: 100,000 credits per transaction per day
+                  </p>
+                  <p style={{ fontSize: '12px', margin: '5px 0', opacity: 0.7 }}>
+                    Minimum Redemption: 10,000 credits per transaction (10 USD)
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-              <br></br>
-          <Divider sx={{ my: 2 }} />
-          <Typography variant="h4">Step 4</Typography>
-          <Typography variant="h6">Log Details for your Redemption</Typography>
-          <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
-          Please fill out the form below to log your order.
-            Fields marked with <span style={{ color: '#ff6b6b', fontWeight: 'bold' }}>*</span> are required.
-          </Typography>
+            <br></br>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="h4">Step 4</Typography>
+            <Typography variant="h6">Log Details for your Redemption</Typography>
+            <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
+              Please fill out the form below to log your order.
+              Fields marked with <span style={{ color: '#ff6b6b', fontWeight: 'bold' }}>*</span> are required.
+            </Typography>
 
-          <form onSubmit={handleOrderSubmit} style={styles.form}>
-            {/* <div style={styles.formGroup}>
+            <form onSubmit={handleOrderSubmit} style={styles.form}>
+              {/* <div style={styles.formGroup}>
               <p style={{ marginBottom: '20px', textAlign: 'center', color: '#ffd700' }}>
                 After sending <strong>{cryptoAmount} {currency}</strong> to wallet: {walletAddress.slice(0, 20)}...
                 <br />Fill out the form below to log your order for manual review.
               </p>
             </div> */}
 
-            <div style={styles.formGroup}>
-              <label>
-                Full Name:<span style={styles.required}>*</span>
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={userDetails.name}
-                onChange={handleInputChange}
-                required
-                style={styles.input}
-                placeholder="Enter your full name"
-              />
-            </div>
+              <div style={styles.formGroup}>
+                <label>
+                  Full Name:<span style={styles.required}>*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={userDetails.name}
+                  onChange={handleInputChange}
+                  required
+                  style={styles.input}
+                  placeholder="Enter your full name"
+                />
+              </div>
 
-            <div style={styles.formGroup}>
-              <label>
-                Email Address:<span style={styles.required}>*</span>
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={userDetails.email}
-                onChange={handleInputChange}
-                required
-                style={styles.input}
-                placeholder="Enter your email address"
-              />
-            </div>
+              <div style={styles.formGroup}>
+                <label>
+                  Email Address:<span style={styles.required}>*</span>
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={userDetails.email}
+                  onChange={handleInputChange}
+                  required
+                  style={styles.input}
+                  placeholder="Enter your email address"
+                />
+              </div>
 
-            <div style={styles.formGroup}>
-              <label>
-                Your Wallet Address:<span style={styles.required}>*</span>
-              </label>
-              <input
-                type="text"
-                name="walletAddress"
-                value={userDetails.walletAddress}
-                onChange={handleInputChange}
-                required
-                style={styles.input}
-                placeholder="Enter the wallet address you sent from"
-              />
-              <small style={{ color: '#cccccc', fontSize: '12px' }}>
-                The wallet address you sent the cryptocurrency from
-              </small>
-            </div>
+              <div style={styles.formGroup}>
+                <label>
+                  Your Wallet Address:<span style={styles.required}>*</span>
+                </label>
+                <input
+                  type="text"
+                  name="walletAddress"
+                  value={userDetails.walletAddress}
+                  onChange={handleInputChange}
+                  required
+                  style={styles.input}
+                  placeholder="Enter the wallet address you sent from"
+                />
+                <small style={{ color: '#cccccc', fontSize: '12px' }}>
+                  The wallet address you sent the cryptocurrency from
+                </small>
+              </div>
 
-     
-            {/* Order Logging Option */}
-            {/* <div style={{ 
+
+              {/* Order Logging Option */}
+              {/* <div style={{ 
                 ...styles.formGroup, 
                 backgroundColor: '#2a2a2a', 
                 padding: '20px', 
@@ -748,226 +748,226 @@ export default function Redeem() {
 
 
 
-           
 
-            <div style={styles.buttonGroup}>
-              <button style={styles.log_button} type="submit">
-                Log Your Order
-              </button>
-              <button style={styles.cancel_button} type="button" onClick={handleCancelOrder}>
-                Cancel Order
-              </button>
-            </div>
-          </form>
 
-          <Divider sx={{ my: 2 }} />
-          <Typography variant="h4" data-step="5">Step 5</Typography>
-          <Typography variant="h6">Processing & Wait Times</Typography>
-          <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
-            {orderSubmitted
-              ? 'Your redemption request has been submitted successfully! Here are the expected processing times.'
-              : 'After submitting your order details, your redemption will be processed according to the schedule below.'
-            }
-          </Typography>
-
-          {/* Processing Information Section */}
-          <div style={{
-            backgroundColor: '#1a1a1a',
-            padding: '25px',
-            borderRadius: '12px',
-            border: '2px solid #ffd700',
-            marginBottom: '20px'
-          }}>
-            <h4 style={{ color: '#ffd700', marginBottom: '20px', textAlign: 'center' }}>
-              Expected Processing Times
-            </h4>
-
-            {/* Credit Amount Based Wait Times */}
-            <div style={{
-              backgroundColor: '#2a2a2a',
-              padding: '20px',
-              borderRadius: '8px',
-              marginBottom: '20px',
-              border: '1px solid #444'
-            }}>
-              <div style={{ marginBottom: '15px' }}>
-                <p style={{ margin: '5px 0', fontSize: '16px', fontWeight: 'bold', color: '#ffd700' }}>
-                  Your Redemption: {parseInt(amount).toLocaleString()} ₡
-                </p>
-                <p style={{ margin: '5px 0', fontSize: '18px', color: '#2e7d32', fontWeight: 'bold' }}>
-                  Expected Processing Time: {getRedemptionWaitTime(amount)}
-                </p>
-              </div>
-              
-              <div style={{ fontSize: '14px', color: '#b0b0b0', lineHeight: '1.5' }}>
-                <p style={{ margin: '8px 0' }}>📋 <strong>Processing Schedule Times (Max):</strong></p>
-                <p style={{ margin: '5px 0', paddingLeft: '20px' }}>• Under 25,000 ₡: <span style={{ color: '#4caf50' }}>12 hours</span></p>
-                <p style={{ margin: '5px 0', paddingLeft: '20px' }}>• 25,000 - 49,999 ₡: <span style={{ color: '#ff9800' }}>24 hours</span></p>
-                <p style={{ margin: '5px 0', paddingLeft: '20px' }}>• 50,000 - 99,999 ₡: <span style={{ color: '#ff9800' }}>36 hours</span></p>
-                <p style={{ margin: '5px 0', paddingLeft: '20px' }}>• 100,000+ ₡: <span style={{ color: '#f44336' }}>48 - 72 hours</span></p>
-              </div>
-              
-              <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#333', borderRadius: '6px' }}>
-                <p style={{ margin: '0', fontSize: '12px', color: '#e0e0e0', fontStyle: 'italic' }}>
-                  ⚡ Processing times may be faster during business hours (9 AM - 5 PM EST, Monday-Friday).
-                  Large redemptions may require additional verification.
-                </p>
-              </div>
-            </div>
-
-            {/* Transaction Summary - Only show if order submitted */}
-            {orderSubmitted && (
-              <div style={{
-                backgroundColor: '#2a2a2a',
-                padding: '20px',
-                borderRadius: '8px',
-                marginTop: '20px',
-                border: '1px solid #444'
-              }}>
-                <h5 style={{ color: '#ffd700', marginBottom: '15px', textAlign: 'center' }}>✅ Redemption Summary</h5>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', fontSize: '14px' }}>
-                  <div>
-                    <p style={{ margin: '5px 0' }}><strong>Credits to Redeem:</strong></p>
-                    <p style={{ margin: '5px 0', color: '#2e7d32', fontSize: '16px', fontWeight: 'bold' }}>
-                      {parseInt(amount).toLocaleString()} ₡
-                    </p>
-                  </div>
-                  <div>
-                    <p style={{ margin: '5px 0' }}><strong>USD Value:</strong></p>
-                    <p style={{ margin: '5px 0', color: '#2e7d32', fontSize: '16px', fontWeight: 'bold' }}>
-                      ${((parseInt(amount) / 1000) || 0).toFixed(2)}
-                    </p>
-                  </div>
-                  <div>
-                    <p style={{ margin: '5px 0' }}><strong>Currency:</strong></p>
-                    <p style={{ margin: '5px 0', color: '#ffd700', fontSize: '16px', fontWeight: 'bold' }}>
-                      {currency}
-                    </p>
-                  </div>
-                  <div>
-                    <p style={{ margin: '5px 0' }}><strong>Amount to Receive:</strong></p>
-                    <p style={{ margin: '5px 0', color: '#ffd700', fontSize: '16px', fontWeight: 'bold' }}>
-                      {cryptoAmount} {currency}
-                    </p>
-                  </div>
-                  <div>
-                    <p style={{ margin: '5px 0' }}><strong>Exchange Rate:</strong></p>
-                    <p style={{ margin: '5px 0', color: '#e0e0e0' }}>
-                      ${rate?.toLocaleString() || '...'} USD
-                    </p>
-                  </div>
-                  <div>
-                    <p style={{ margin: '5px 0' }}><strong>Status:</strong></p>
-                    <p style={{ margin: '5px 0', color: '#ff9800', fontWeight: 'bold' }}>
-                      Pending Processing
-                    </p>
-                  </div>
-                </div>
-                
-                <div style={{ 
-                  marginTop: '20px', 
-                  padding: '15px', 
-                  backgroundColor: '#1b5e20', 
-                  borderRadius: '8px',
-                  textAlign: 'center'
-                }}>
-                  <p style={{ margin: '0', color: '#81c784', fontWeight: 'bold', fontSize: '16px' }}>
-                    🎉 Your redemption request has been received!
-                  </p>
-                  <p style={{ margin: '10px 0 0 0', color: '#c8e6c9', fontSize: '14px' }}>
-                    You will receive your {currency} within {getRedemptionWaitTime(amount).toLowerCase()}. 
-                    Check your wallet address for the incoming transaction.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Next Steps */}
-            {orderSubmitted && (
-              <div style={{
-                backgroundColor: '#2a2a2a',
-                padding: '20px',
-                borderRadius: '8px',
-                marginTop: '20px',
-                border: '1px solid #444'
-              }}>
-                <h5 style={{ color: '#ffd700', marginBottom: '15px' }}>📋 What Happens Next?</h5>
-                <div style={{ fontSize: '14px', color: '#e0e0e0', lineHeight: '1.6' }}>
-                  <p style={{ margin: '8px 0', display: 'flex', alignItems: 'flex-start' }}>
-                    <span style={{ marginRight: '10px', color: '#4caf50' }}>1.</span>
-                    Our team will verify your transaction details within the expected timeframe
-                  </p>
-                  <p style={{ margin: '8px 0', display: 'flex', alignItems: 'flex-start' }}>
-                    <span style={{ marginRight: '10px', color: '#4caf50' }}>2.</span>
-                    Once verified, {currency} will be sent to your specified wallet address
-                  </p>
-                  <p style={{ margin: '8px 0', display: 'flex', alignItems: 'flex-start' }}>
-                    <span style={{ marginRight: '10px', color: '#4caf50' }}>3.</span>
-                    You'll receive an email confirmation when the transaction is complete
-                  </p>
-                  <p style={{ margin: '8px 0', display: 'flex', alignItems: 'flex-start' }}>
-                    <span style={{ marginRight: '10px', color: '#ff9800' }}>⚠️</span>
-                    Please ensure your wallet address is correct - transactions cannot be reversed
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <div style={{
-            display: 'flex',
-            gap: '15px',
-            justifyContent: 'center',
-            flexWrap: 'wrap',
-            marginTop: '20px'
-          }}>
-            {orderSubmitted ? (
-              <button
-                onClick={() => navigate('/wallet')}
-                style={{
-                  ...styles.button,
-                  backgroundColor: '#4caf50',
-                  fontSize: '16px',
-                  padding: '15px 30px'
-                }}
-              >
-                <span style={{ marginRight: '10px' }}>🎉</span>
-                Go to Wallet
-              </button>
-            ) : (
-              <>
-                <button
-                  // onClick={() => window.location.reload()}
-                  style={{
-                    ...styles.button,
-                    backgroundColor: '#ff9800',
-                    fontSize: '14px',
-                    padding: '12px 24px'
-                  }}
-                >
-                  Complete Redemption
+              <div style={styles.buttonGroup}>
+                <button style={styles.log_button} type="submit">
+                  Log Your Order
                 </button>
+                <button style={styles.cancel_button} type="button" onClick={handleCancelOrder}>
+                  Cancel Order
+                </button>
+              </div>
+            </form>
+
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="h4" data-step="5">Step 5</Typography>
+            <Typography variant="h6">Processing & Wait Times</Typography>
+            <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
+              {orderSubmitted
+                ? 'Your redemption request has been submitted successfully! Here are the expected processing times.'
+                : 'After submitting your order details, your redemption will be processed according to the schedule below.'
+              }
+            </Typography>
+
+            {/* Processing Information Section */}
+            <div style={{
+              backgroundColor: '#1a1a1a',
+              padding: '25px',
+              borderRadius: '12px',
+              border: '2px solid #ffd700',
+              marginBottom: '20px'
+            }}>
+              <h4 style={{ color: '#ffd700', marginBottom: '20px', textAlign: 'center' }}>
+                Expected Processing Times
+              </h4>
+
+              {/* Credit Amount Based Wait Times */}
+              <div style={{
+                backgroundColor: '#2a2a2a',
+                padding: '20px',
+                borderRadius: '8px',
+                marginBottom: '20px',
+                border: '1px solid #444'
+              }}>
+                <div style={{ marginBottom: '15px' }}>
+                  <p style={{ margin: '5px 0', fontSize: '16px', fontWeight: 'bold', color: '#ffd700' }}>
+                    Your Redemption: {parseInt(amount).toLocaleString()} ₡
+                  </p>
+                  <p style={{ margin: '5px 0', fontSize: '18px', color: '#2e7d32', fontWeight: 'bold' }}>
+                    Expected Processing Time: {getRedemptionWaitTime(amount)}
+                  </p>
+                </div>
+
+                <div style={{ fontSize: '14px', color: '#b0b0b0', lineHeight: '1.5' }}>
+                  <p style={{ margin: '8px 0' }}>📋 <strong>Processing Schedule Times (Max):</strong></p>
+                  <p style={{ margin: '5px 0', paddingLeft: '20px' }}>• Under 25,000 ₡: <span style={{ color: '#4caf50' }}>12 hours</span></p>
+                  <p style={{ margin: '5px 0', paddingLeft: '20px' }}>• 25,000 - 49,999 ₡: <span style={{ color: '#ff9800' }}>24 hours</span></p>
+                  <p style={{ margin: '5px 0', paddingLeft: '20px' }}>• 50,000 - 99,999 ₡: <span style={{ color: '#ff9800' }}>36 hours</span></p>
+                  <p style={{ margin: '5px 0', paddingLeft: '20px' }}>• 100,000+ ₡: <span style={{ color: '#f44336' }}>48 - 72 hours</span></p>
+                </div>
+
+                <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#333', borderRadius: '6px' }}>
+                  <p style={{ margin: '0', fontSize: '12px', color: '#e0e0e0', fontStyle: 'italic' }}>
+                    ⚡ Processing times may be faster during business hours (9 AM - 5 PM EST, Monday-Friday).
+                    Large redemptions may require additional verification.
+                  </p>
+                </div>
+              </div>
+
+              {/* Transaction Summary - Only show if order submitted */}
+              {orderSubmitted && (
+                <div style={{
+                  backgroundColor: '#2a2a2a',
+                  padding: '20px',
+                  borderRadius: '8px',
+                  marginTop: '20px',
+                  border: '1px solid #444'
+                }}>
+                  <h5 style={{ color: '#ffd700', marginBottom: '15px', textAlign: 'center' }}>✅ Redemption Summary</h5>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', fontSize: '14px' }}>
+                    <div>
+                      <p style={{ margin: '5px 0' }}><strong>Credits to Redeem:</strong></p>
+                      <p style={{ margin: '5px 0', color: '#2e7d32', fontSize: '16px', fontWeight: 'bold' }}>
+                        {parseInt(amount).toLocaleString()} ₡
+                      </p>
+                    </div>
+                    <div>
+                      <p style={{ margin: '5px 0' }}><strong>USD Value:</strong></p>
+                      <p style={{ margin: '5px 0', color: '#2e7d32', fontSize: '16px', fontWeight: 'bold' }}>
+                        ${((parseInt(amount) / 1000) || 0).toFixed(2)}
+                      </p>
+                    </div>
+                    <div>
+                      <p style={{ margin: '5px 0' }}><strong>Currency:</strong></p>
+                      <p style={{ margin: '5px 0', color: '#ffd700', fontSize: '16px', fontWeight: 'bold' }}>
+                        {currency}
+                      </p>
+                    </div>
+                    <div>
+                      <p style={{ margin: '5px 0' }}><strong>Amount to Receive:</strong></p>
+                      <p style={{ margin: '5px 0', color: '#ffd700', fontSize: '16px', fontWeight: 'bold' }}>
+                        {cryptoAmount} {currency}
+                      </p>
+                    </div>
+                    <div>
+                      <p style={{ margin: '5px 0' }}><strong>Exchange Rate:</strong></p>
+                      <p style={{ margin: '5px 0', color: '#e0e0e0' }}>
+                        ${rate?.toLocaleString() || '...'} USD
+                      </p>
+                    </div>
+                    <div>
+                      <p style={{ margin: '5px 0' }}><strong>Status:</strong></p>
+                      <p style={{ margin: '5px 0', color: '#ff9800', fontWeight: 'bold' }}>
+                        Pending Processing
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{
+                    marginTop: '20px',
+                    padding: '15px',
+                    backgroundColor: '#1b5e20',
+                    borderRadius: '8px',
+                    textAlign: 'center'
+                  }}>
+                    <p style={{ margin: '0', color: '#81c784', fontWeight: 'bold', fontSize: '16px' }}>
+                      🎉 Your redemption request has been received!
+                    </p>
+                    <p style={{ margin: '10px 0 0 0', color: '#c8e6c9', fontSize: '14px' }}>
+                      You will receive your {currency} within {getRedemptionWaitTime(amount).toLowerCase()}.
+                      Check your wallet address for the incoming transaction.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Next Steps */}
+              {orderSubmitted && (
+                <div style={{
+                  backgroundColor: '#2a2a2a',
+                  padding: '20px',
+                  borderRadius: '8px',
+                  marginTop: '20px',
+                  border: '1px solid #444'
+                }}>
+                  <h5 style={{ color: '#ffd700', marginBottom: '15px' }}>📋 What Happens Next?</h5>
+                  <div style={{ fontSize: '14px', color: '#e0e0e0', lineHeight: '1.6' }}>
+                    <p style={{ margin: '8px 0', display: 'flex', alignItems: 'flex-start' }}>
+                      <span style={{ marginRight: '10px', color: '#4caf50' }}>1.</span>
+                      Our team will verify your transaction details within the expected timeframe
+                    </p>
+                    <p style={{ margin: '8px 0', display: 'flex', alignItems: 'flex-start' }}>
+                      <span style={{ marginRight: '10px', color: '#4caf50' }}>2.</span>
+                      Once verified, {currency} will be sent to your specified wallet address
+                    </p>
+                    <p style={{ margin: '8px 0', display: 'flex', alignItems: 'flex-start' }}>
+                      <span style={{ marginRight: '10px', color: '#4caf50' }}>3.</span>
+                      You'll receive an email confirmation when the transaction is complete
+                    </p>
+                    <p style={{ margin: '8px 0', display: 'flex', alignItems: 'flex-start' }}>
+                      <span style={{ marginRight: '10px', color: '#ff9800' }}>⚠️</span>
+                      Please ensure your wallet address is correct - transactions cannot be reversed
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{
+              display: 'flex',
+              gap: '15px',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+              marginTop: '20px'
+            }}>
+              {orderSubmitted ? (
                 <button
                   onClick={() => navigate('/wallet')}
                   style={{
-                    ...styles.cancel_button,
-                    fontSize: '14px',
-                    padding: '12px 24px'
+                    ...styles.button,
+                    backgroundColor: '#4caf50',
+                    fontSize: '16px',
+                    padding: '15px 30px'
                   }}
                 >
-                  Back to Wallet
+                  <span style={{ marginRight: '10px' }}>🎉</span>
+                  Go to Wallet
                 </button>
-              </>
-            )}
-          </div>
-          
+              ) : (
+                <>
+                  <button
+                    // onClick={() => window.location.reload()}
+                    style={{
+                      ...styles.button,
+                      backgroundColor: '#ff9800',
+                      fontSize: '14px',
+                      padding: '12px 24px'
+                    }}
+                  >
+                    Complete Redemption
+                  </button>
+                  <button
+                    onClick={() => navigate('/wallet')}
+                    style={{
+                      ...styles.cancel_button,
+                      fontSize: '14px',
+                      padding: '12px 24px'
+                    }}
+                  >
+                    Back to Wallet
+                  </button>
+                </>
+              )}
+            </div>
 
-          {/* PaymentButton for demo/alternative payment method */}
-          {/* <PaymentButton amountUSD={10} onError={onPaymentError}>Add $10 in Credits</PaymentButton> */}
-        </CardContent>
-      </Card>
-    </Stack>
+
+            {/* PaymentButton for demo/alternative payment method */}
+            {/* <PaymentButton amountUSD={10} onError={onPaymentError}>Add $10 in Credits</PaymentButton> */}
+          </CardContent>
+        </Card>
+      </Stack>
     </Container >
   );
 }

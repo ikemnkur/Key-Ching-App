@@ -96,6 +96,13 @@ const Info = () => {
             try {
                 // Placeholder: const data = await fetchInfoData();
                 // setInfoData(data);
+                if(window.location.href.includes("info")){
+                    // do nothing
+                } else {
+                    let loggedIn = (localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).loginStatus : false);
+                    if (loggedIn) window.location.reload(true);
+                }
+                
             } catch (err) {
                 setTimeout(() => navigate('/login'), 500);
                 setError('Failed to load data, Please Re-Login');

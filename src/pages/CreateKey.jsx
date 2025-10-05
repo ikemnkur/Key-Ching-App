@@ -45,6 +45,9 @@ import {
 import { Upload, AttachFile, Description } from '@mui/icons-material';
 import api from '../api/client';
 
+import { useToast } from '../contexts/ToastContext';
+import { useNavigate } from 'react-router-dom';
+
 export default function CreateKey(){
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState(50);
@@ -60,6 +63,8 @@ export default function CreateKey(){
   const [expirationDays, setExpirationDays] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState('');
+
+  const navigate = useNavigate();
   
   // Function to validate and count keys
   const validateKeys = (content) => {
@@ -129,19 +134,19 @@ export default function CreateKey(){
       return;
     }
 
-    // Check if keys_available matches actual key count
-    if (keysAvailable !== validation.count) {
-      const shouldContinue = window.confirm(
-        `You specified ${keysAvailable} keys available, but uploaded ${validation.count} keys. ` +
-        `Do you want to continue with ${validation.count} keys?`
-      );
-      if (shouldContinue) {
-        setKeysAvailable(validation.count);
-      } else {
-        setIsUploading(false);
-        return;
-      }
-    }
+    // // Check if keys_available matches actual key count
+    // if (keysAvailable !== validation.count) {
+    //   const shouldContinue = window.confirm(
+    //     `You specified ${keysAvailable} keys available, but uploaded ${validation.count} keys. ` +
+    //     `Do you want to continue with ${validation.count} keys?`
+    //   );
+    //   if (shouldContinue) {
+    //     setKeysAvailable(validation.count);
+    //   } else {
+    //     setIsUploading(false);
+    //     return;
+    //   }
+    // }
 
     // Compose request body as JSON (not FormData)
     const payload = {
@@ -177,6 +182,10 @@ export default function CreateKey(){
         setExpirationDays('');
         setKeysAvailable(10);
         setTags('');
+
+        setTimeout(() => {
+          navigate('/listings')
+        }, 2000); // Clear message after 10 seconds
       } else {
         setUploadStatus('error');
         setErrorMessage(data?.message || 'Upload failed.');
@@ -423,14 +432,14 @@ export default function CreateKey(){
                         fontSize: '0.9rem'
                       }
                     }}
-                    helperText={(() => {
-                      const validation = validateKeys(keyText);
-                      const baseText = `${validation.count} valid keys entered`;
-                      if (validation.errors.length > 0) {
-                        return `${baseText} (${validation.errors.length} errors found)`;
-                      }
-                      return baseText;
-                    })()}
+                    // helperText={(() => {
+                    //   const validation = validateKeys(keyText);
+                    //   const baseText = `${validation.count} valid keys entered`;
+                    //   if (validation.errors.length > 0) {
+                    //     return `${baseText} (${validation.errors.length} errors found)`;
+                    //   }
+                    //   return baseText;
+                    // })()}
                   />
                 )}
               </Box>

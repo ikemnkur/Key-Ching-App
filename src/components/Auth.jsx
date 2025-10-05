@@ -289,8 +289,10 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
       }
 
       // Always navigate to main page after successful auth
-      console.log('🧭 Navigating to /main page...');
-      navigate('/');
+      console.log('🧭 Navigating to /dashboard page...');
+      setTimeout(() => {
+        navigate('/');
+      }, 500);
 
     } catch (error) {
       console.error('Auth error:', error.message || 'An error occurred');

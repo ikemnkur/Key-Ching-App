@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Container, 
-  Typography, 
-  Stack, 
-  Skeleton, 
+import { useNavigate } from 'react-router-dom';
+import {
+  Container,
+  Typography,
+  Stack,
+  Skeleton,
   Grid2 as Grid,
   Button,
   Dialog,
@@ -14,9 +15,12 @@ import {
   FormControlLabel,
   Switch,
   Box,
-  Chip
+  Chip,
+  Paper,
+  Card,
+  CardContent
 } from '@mui/material';
-import { Edit, Delete, Add } from '@mui/icons-material';
+import { Edit, Delete, Add, Storefront, ShoppingBag, Share } from '@mui/icons-material';
 import api from '../api/client';
 import KeyCard from '../components/KeyCard';
 import KeyRevealDialog from '../components/KeyRevealDialog';
@@ -39,6 +43,7 @@ export default function Listing() {
   });
   const { error, info, success } = useToast();
   const userData = JSON.parse(localStorage.getItem("userdata") || '{"username":"user_123"}');
+  const navigate = useNavigate();
 
   const loadListings = async () => {
     try {
@@ -46,13 +51,10 @@ export default function Listing() {
       const { data } = await api.get(`/api/listings/${username}`);
       setItems(data || []);
     } catch (e) {
-      console.error(e);
-      // fallback demo items
-      setItems([
-        { id: 1, keyTitle: 'Windows Pro Key', description: 'Genuine retail key batch', price: 250, quantity: 50, sold: 3 },
-        { id: 2, keyTitle: 'Game DLC Code', description: 'Season pass S5', price: 120, quantity: 10, sold: 10, dark: true },
-        { id: 3, keyTitle: 'Archive #42 Password', description: 'Encrypted zip password', price: 75, quantity: 5, sold: 1 },
-      ]);
+      console.error('Failed to load listings:', e);
+      // Only show error message, don't set demo items
+      error('Failed to load your listings');
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -84,11 +86,32 @@ export default function Listing() {
       keyTitle: item.keyTitle || item.title || '',
       description: item.description || '',
       price: item.price || item.price_credits || '',
-      tags: Array.isArray(item.tags) ? item.tags.join(', ') : 
-           (typeof item.tags === 'string' ? item.tags : ''),
+      tags: Array.isArray(item.tags) ? item.tags.join(', ') :
+        (typeof item.tags === 'string' ? item.tags : ''),
       isActive: item.isActive !== undefined ? item.isActive : true
     });
     setEditDialogOpen(true);
+  };
+
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = (item) => {
+    const url = `https://key-ching.com/unlock/${item.id}`;
+    setShareUrl(url);
+    setShareDialogOpen(true);
+    setCopied(false);
+  };
+
+  const handleCopyShareUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (e) {
+      error('Failed to copy link');
+    }
   };
 
   const handleDelete = (item) => {
@@ -109,7 +132,7 @@ export default function Listing() {
       };
 
       const { data } = await api.put(`/api/listings/${selectedItem.id}`, updateData);
-      
+
       if (data.success) {
         success('Listing updated successfully');
         setEditDialogOpen(false);
@@ -132,7 +155,7 @@ export default function Listing() {
       const { data } = await api.delete(`/api/listings/${selectedItem.id}`, {
         data: { username: userData.username }
       });
-      
+
       if (data.success) {
         success(data.message || 'Listing deleted successfully');
         setDeleteDialogOpen(false);
@@ -163,6 +186,48 @@ export default function Listing() {
             </Grid>
           ))}
         </Grid>
+      ) : items.length === 0 ? (
+        // Empty State UI
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}>
+          <Card sx={{ maxWidth: 500, textAlign: 'center', bgcolor: '#000000', boxShadow: 3, borderRadius: 3, border: '2px solid #884' }}>
+            <CardContent sx={{ p: 4 }}>
+              <Box sx={{ mb: 3 }}>
+                <Storefront
+                  sx={{
+                    fontSize: 80,
+                    color: 'primary.main',
+                    opacity: 0.6,
+                    mb: 2
+                  }}
+                />
+              </Box>
+              <Typography variant="h5" gutterBottom sx={{ color: 'text.primary', fontWeight: 600 }}>
+                No Listings Yet
+              </Typography>
+              <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3, lineHeight: 1.6 }}>
+                You haven't created any key listings for sale yet. Start by uploading your first batch of keys to begin earning credits!
+              </Typography>
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<Add />}
+                sx={{
+                  px: 4,
+                  py: 1.5,
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  borderRadius: 2
+                }}
+                onClick={() => navigate('/create-key')}
+              >
+                Create Your First Listing
+              </Button>
+              <Typography variant="caption" display="block" sx={{ mt: 2, color: 'text.secondary', opacity: 0.8 }}>
+                Upload keys in .txt or .csv format, or paste them directly
+              </Typography>
+            </CardContent>
+          </Card>
+        </Box>
       ) : (
         <Grid container spacing={2}>
           {items.map(item => (
@@ -181,6 +246,23 @@ export default function Listing() {
                 <Button
                   size="small"
                   variant="outlined"
+                  startIcon={<Share />}
+                  onClick={() => handleShare(item)}
+                  sx={{
+                    flex: 1,
+                    color: '#08FF00',
+                    borderColor: '#08FF00', // Green outline
+                    '&:hover': {
+                      borderColor: '#00c853', // Darker green on hover
+                      backgroundColor: 'rgba(8,255,0,0.08)'
+                    }
+                  }}
+                >
+                  Share
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
                   color="error"
                   startIcon={<Delete />}
                   onClick={() => handleDelete(item)}
@@ -194,9 +276,8 @@ export default function Listing() {
         </Grid>
       )}
 
-      {/* Edit Dialog */}
-      <Dialog 
-        open={editDialogOpen} 
+      <Dialog
+        open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
         maxWidth="sm"
         fullWidth
@@ -211,7 +292,7 @@ export default function Listing() {
               label="Title"
               fullWidth
               value={editFormData.keyTitle}
-              onChange={(e) => setEditFormData({...editFormData, keyTitle: e.target.value})}
+              onChange={(e) => setEditFormData({ ...editFormData, keyTitle: e.target.value })}
               InputProps={{ sx: { color: 'text.primary' } }}
               InputLabelProps={{ sx: { color: 'text.secondary' } }}
             />
@@ -221,7 +302,7 @@ export default function Listing() {
               multiline
               rows={3}
               value={editFormData.description}
-              onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+              onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
               InputProps={{ sx: { color: 'text.primary' } }}
               InputLabelProps={{ sx: { color: 'text.secondary' } }}
             />
@@ -230,7 +311,7 @@ export default function Listing() {
               fullWidth
               type="number"
               value={editFormData.price}
-              onChange={(e) => setEditFormData({...editFormData, price: e.target.value})}
+              onChange={(e) => setEditFormData({ ...editFormData, price: e.target.value })}
               InputProps={{ sx: { color: 'text.primary' } }}
               InputLabelProps={{ sx: { color: 'text.secondary' } }}
             />
@@ -238,7 +319,7 @@ export default function Listing() {
               label="Tags (comma separated)"
               fullWidth
               value={editFormData.tags}
-              onChange={(e) => setEditFormData({...editFormData, tags: e.target.value})}
+              onChange={(e) => setEditFormData({ ...editFormData, tags: e.target.value })}
               helperText="e.g., gaming, software, premium"
               InputProps={{ sx: { color: 'text.primary' } }}
               InputLabelProps={{ sx: { color: 'text.secondary' } }}
@@ -247,7 +328,7 @@ export default function Listing() {
               control={
                 <Switch
                   checked={editFormData.isActive}
-                  onChange={(e) => setEditFormData({...editFormData, isActive: e.target.checked})}
+                  onChange={(e) => setEditFormData({ ...editFormData, isActive: e.target.checked })}
                   color="primary"
                 />
               }
@@ -263,8 +344,8 @@ export default function Listing() {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog 
-        open={deleteDialogOpen} 
+      <Dialog
+        open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         maxWidth="sm"
         PaperProps={{
@@ -289,6 +370,47 @@ export default function Listing() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Share Dialog */}
+      <Dialog
+        open={shareDialogOpen}
+        onClose={() => setShareDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: { bgcolor: 'background.default', border: '1px solid #884', color: 'rgba(186, 186, 39, 1)' }
+        }}
+      >
+        <DialogTitle>Share Listing</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>
+            Share this link to let others unlock keys from this listing:
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <TextField
+              fullWidth
+              value={shareUrl}
+              InputProps={{
+                readOnly: true,
+                sx: { color: 'text.primary' }
+              }}
+              InputLabelProps={{ sx: { color: 'text.secondary' } }}
+            />
+            <Button
+              variant="contained"
+              onClick={handleCopyShareUrl}
+              sx={{ whiteSpace: 'nowrap' }}
+            >
+              {copied ? 'Copied!' : 'Copy Link'}
+            </Button>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShareDialogOpen(false)} sx={{ color: 'text.secondary' }}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Key Reveal Dialog */}
 
       <KeyRevealDialog open={open} onClose={() => setOpen(false)} value={keyValue} />
     </Container>

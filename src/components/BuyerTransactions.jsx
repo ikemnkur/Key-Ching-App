@@ -110,6 +110,7 @@ const generateBuyerMockData = () => {
   ];
 };
 
+
 // Helper component for the modal with Key-Ching specific styling
 const DetailsModal = ({ transaction, open, handleClose }) => {
   const navigate = useNavigate();
@@ -147,7 +148,7 @@ const DetailsModal = ({ transaction, open, handleClose }) => {
     >
       <Paper sx={{
         p: 4,
-        width: { xs: '90%', md: '500px' },
+        width: { xs: '90%', md: '550px' },
         maxHeight: '80vh',
         overflowY: 'auto',
         position: 'relative',
@@ -178,7 +179,7 @@ const DetailsModal = ({ transaction, open, handleClose }) => {
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Typography sx={{ color: '#b0b0b0' }}>Transaction ID:</Typography>
+            <Typography sx={{ color: '#b0b0b0' }}>Transaction ID: ..................</Typography>
             <Typography sx={{ color: '#e0e0e0', fontFamily: 'monospace' }}>#{transaction.id}</Typography>
           </Box>
 
@@ -365,7 +366,7 @@ const BuyerTransactions = () => {
           id: `credit_${credit.id}`,
           transaction_type: 'Credit Purchase',
           credits: credit.credits,
-          amount_usd: credit.amount.toFixed(4), // Keep original amount precision
+          amount_usd: credit.amount, // Keep original amount precision
           key_title: null,
           buyer_username: credit.username,
           status: credit.status,
@@ -383,6 +384,7 @@ const BuyerTransactions = () => {
 
         setTransactions(allTransactions);
         setFilteredTransactions(allTransactions);
+        setLoading(false);
       
       } catch (err) {
         console.error('Failed to fetch transaction history:', err);

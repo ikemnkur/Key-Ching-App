@@ -355,7 +355,7 @@ const Notifications = () => {
                           variant="caption"
                           sx={{ color: '#b0b0b0' }}
                         >
-                          {getRelativeTime(notif.created_at)}
+                          {getRelativeTime(notif.createdAt)}
                         </Typography>
                       </Box>
                     }

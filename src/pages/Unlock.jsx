@@ -57,7 +57,7 @@ export default function Unlock() {
     (async () => {
       try {
         // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Use the actual JSON Server endpoint: /createdKeys/:id
         const response = await fetch(`http://localhost:3001/api/createdKeys/${params.id}`);
@@ -89,9 +89,9 @@ export default function Unlock() {
       info('Unlocking key...');
 
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // await new Promise(resolve => setTimeout(resolve, 1500));
 
-      const { data } = await api.post(`/unlock/${item.id}`,
+      const { data } = await api.post(`/api/unlock/${item.id}`,
         {
           // You can include any necessary payload here
           username: userData.username,
@@ -260,9 +260,14 @@ export default function Unlock() {
 
         {/* Instructions */}
         <Alert severity="info" sx={{ mt: 3 }}>
+          {/* <Typography variant="body2">
+            <strong>Important:</strong> Once unlocked, make sure to copy and save your key immediately.
+            Keys are ephemeral and subject to deletion by the key creator.
+          </Typography> */}
+
           <Typography variant="body2">
             <strong>Important:</strong> Once unlocked, make sure to copy and save your key immediately.
-            Keys are shown only one time.
+            Keys are only shown one time.
           </Typography>
         </Alert>
 
@@ -270,7 +275,7 @@ export default function Unlock() {
         <KeyRevealDialog
           open={open}
           onClose={() => setOpen(false)}
-          title={`Your ${item.title}`}
+          title={`Your Key: ${item.keyTitle}`}
           value={keyValue}
         />
       </Stack>

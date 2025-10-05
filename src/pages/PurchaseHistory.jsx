@@ -11,7 +11,7 @@ export default function PurchaseHistory(){
 
   const load = async ()=>{
     try{
-      const { data } = await api.get('/wallet');
+      const { data } = await api.get('/api/wallet');
       // Filter for current user's wallet data
       const userWalletData = data.find(wallet => wallet.userId === 'user_123');
       setBalance(userWalletData?.balance ?? 0);

@@ -535,9 +535,31 @@ export const uploadMediaFiles = async (formData) => {
   return res.data;
 };
 
-export const uploadTransactionScreenshot = async (formData) => {
+// export const uploadTransactionScreenshot = async (formData) => {
+//   try {
+//     const res = await api.post('/upload/transaction-screenshot', formData, {
+//       headers: { 
+//         // Let browser set the correct multipart boundary automatically
+//         // Do NOT set Content-Type, let Axios/browser handle it for FormData
+//       },
+//       transformRequest: [(data, headers) => {
+//         // Remove any JSON defaults your instance might add
+//         delete headers.common?.['Content-Type'];
+//         delete headers.post?.['Content-Type'];
+//         return data; // keep FormData as-is
+//       }],
+//     });
+//     return res.data;
+//   } catch (error) {
+//     console.error('API - Error uploading transaction screenshot:', error);
+//     throw error;
+//   }
+// };
+
+
+export const uploadTransactionScreenshot = async (formData, username, transactionHash) => {
   try {
-    const res = await api.post('/upload/transaction-screenshot', formData, {
+    const res = await api.post(`/upload/transaction-screenshot/${username}/${transactionHash}`, formData, {
       // Let Axios/browser set the multipart boundary automatically:
       // headers: { 'Content-Type': undefined },  // <- clears any JSON default
       //  headers: { 'Content-Type': 'multipart/form-data' },
@@ -555,7 +577,6 @@ export const uploadTransactionScreenshot = async (formData) => {
     throw error;
   }
 };
-
 
 export const uploadProfilePicture = async (formData) => {
   const res = await api.post('/upload/profile-picture', formData, {

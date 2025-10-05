@@ -97,7 +97,7 @@ export default function Wallet() {
                                 >
                                     Get More Credits
                                 </Button>
-                                <Button
+                                {/* <Button
                                     onClick={() => navigate("/your-keys")}
                                     variant="outlined"
                                     sx={{
@@ -110,7 +110,7 @@ export default function Wallet() {
                                     }}
                                 >
                                     Your Keys
-                                </Button>
+                                </Button> */}
                                 <Button
                                     onClick={() => navigate("/purchase-history")}
                                     variant="outlined"

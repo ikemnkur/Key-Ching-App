@@ -335,7 +335,7 @@ export default function Purchase() {
     try {
       // Simulate API call to validate transaction
       // In real implementation, this would check the blockchain
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate API delay
+      // await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate API delay
       
       // Simulate different outcomes based on transaction ID length
       const isValid = userDetails.transactionId.length > 10;
