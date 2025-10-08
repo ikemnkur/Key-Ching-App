@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import { Edit, Delete, Add, Storefront, ShoppingBag, Share } from '@mui/icons-material';
 import api from '../api/client';
-import KeyCard from '../components/KeyCard';
+import KeyCard from '../components/KeyCardListing';
 import KeyRevealDialog from '../components/KeyRevealDialog';
 import { useToast } from '../contexts/ToastContext';
 
@@ -98,7 +98,9 @@ export default function Listing() {
   const [copied, setCopied] = useState(false);
 
   const handleShare = (item) => {
-    const url = `https://key-ching.com/unlock/${item.id}`;
+    let currentUrl = window.location.origin;
+    if (currentUrl.endsWith('/')) currentUrl = currentUrl.slice(0, -1);
+    const url = `${currentUrl}/unlock/${item.id}`;
     setShareUrl(url);
     setShareDialogOpen(true);
     setCopied(false);
