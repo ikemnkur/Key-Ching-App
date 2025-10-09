@@ -102,6 +102,9 @@ const SellerTransactions = () => {
     return transactions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   };
 
+
+  const API_URL = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:3001';
+
   useEffect(() => {
     const loadTransactions = async () => {
       try {
@@ -112,7 +115,7 @@ const SellerTransactions = () => {
         const username = userData.username || 'seller_123';
         
         // Fetch earnings data from JSON server
-        const response = await fetch('http://localhost:3001/api/earnings');
+        const response = await fetch(`${API_URL}/api/earnings`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -167,8 +170,8 @@ const SellerTransactions = () => {
       const username = userData.username || 'seller_123';
       
       // Fetch earnings data from JSON server
-      const response = await fetch('http://localhost:3001/api/earnings');
-      
+      const response = await fetch(`${API_URL}/api/earnings`);
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

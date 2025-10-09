@@ -31,13 +31,16 @@ const AccountPage = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
+  const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:3001';
+
   useEffect(() => {
     const loadUserProfile = async () => {
       try {
         const storedUserData = JSON.parse(localStorage.getItem("userdata") || '{}');
         const username = storedUserData.username || 'user_123';
 
-        const response = await fetch('http://localhost:3001/api/userData');
+        const response = await fetch(`${API_URL}/api/userData`);
         if (!response.ok) throw new Error('Failed to fetch');
         
         const allUsers = await response.json();

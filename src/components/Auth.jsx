@@ -201,7 +201,7 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
         console.log('📝 Processing login for email:', email);
         
         // Use the authentication endpoint we set up in the server
-        const loginResponse = await fetch('http://localhost:3001/api/auth/login', {
+        const loginResponse = await fetch(`${API_URL}/api/auth/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -242,7 +242,7 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
         console.log('📝 Processing registration for username:', username);
         
         // Use the registration endpoint we set up in the server
-        const registerResponse = await fetch('http://localhost:3001/api/auth/register', {
+        const registerResponse = await fetch(`${API_URL}/api/auth/register`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

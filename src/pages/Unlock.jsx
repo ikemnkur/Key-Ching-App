@@ -53,6 +53,8 @@ export default function Unlock() {
     4: { id: 4, title: 'Office 365 License Keys', description: 'Microsoft Office 365 Business licenses', price_credits: 300, quantity: 20, sold: 5, available: 15 }
   };
 
+  const API_URL = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:3001';
+
   useEffect(() => {
     (async () => {
       try {
@@ -60,7 +62,7 @@ export default function Unlock() {
         // await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Use the actual JSON Server endpoint: /createdKeys/:id
-        const response = await fetch(`http://localhost:3001/api/createdKeys/${params.id}`);
+        const response = await fetch(`${API_URL}/api/createdKeys/${params.id}`);
         
         if (response.ok) {
           const data = await response.json();

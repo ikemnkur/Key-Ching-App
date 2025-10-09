@@ -38,6 +38,8 @@ const Notifications = () => {
 
   const itemsPerPage = 5; // Smaller page size for better UX
 
+  const API_URL = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:3001';
+
   // Mock notifications data for Key-Ching app
   const generateMockNotifications = () => {
     const currentTime = new Date();
@@ -152,7 +154,9 @@ const Notifications = () => {
       const username = userData.username || 'user_123';
       
       // Fetch all notifications and filter by username
-      const response = await fetch('http://localhost:3001/api/notifications');
+      const response = await fetch(`${API_URL}/api/notifications`);
+
+      
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

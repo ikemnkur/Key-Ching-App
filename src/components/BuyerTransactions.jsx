@@ -303,6 +303,8 @@ const BuyerTransactions = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
+  const API_URL = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:3001';
+
   useEffect(() => {
     const loadTransactions = async () => {
       try {
@@ -321,8 +323,8 @@ const BuyerTransactions = () => {
         
         // Fetch data from JSON server
         // Get unlocks and credit purchases for the buyer
-        const unlocksResponse = await fetch(`http://localhost:3001/api/unlocks`);
-        const creditsResponse = await fetch(`http://localhost:3001/api/buyCredits`);
+        const unlocksResponse = await fetch(`${API_URL}/api/unlocks`);
+        const creditsResponse = await fetch(`${API_URL}/api/buyCredits`);
 
         if (!unlocksResponse.ok) {
           throw new Error(`HTTP error! status: ${unlocksResponse.status}`);

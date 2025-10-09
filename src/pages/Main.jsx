@@ -7,6 +7,8 @@ import { useToast } from '../contexts/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { Password } from '@mui/icons-material';
 
+const API_URL = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:3001';
+
 export default function Wallet() {
     const [balance, setBalance] = useState(null);
     const { success, error } = useToast();
@@ -26,7 +28,7 @@ export default function Wallet() {
                 (Date.now() - parseInt(localStorage.getItem('lastDataFetch') || "0", 10) > 1.5 * 60 * 1000);
 
             if (lastDataFetchTooOld) {
-                response = await api.post(`http://localhost:3001/api/user`, {
+                response = await api.post(`${API_URL}/api/user`, {
                     username: userData.username,
                     email: userData.email,
                     password: localStorage.getItem('passwordtxt')
