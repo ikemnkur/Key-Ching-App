@@ -78,8 +78,8 @@ export default function CreateKey(){
       // Basic validation - keys should be at least 4 characters and not contain spaces
       if (line.length < 4) {
         errors.push(`Line ${index + 1}: Key too short (minimum 4 characters)`);
-      } else if (line.includes(' ')) {
-        errors.push(`Line ${index + 1}: Key contains spaces`);
+      // } else if (line.includes(' ')) {
+      //   errors.push(`Line ${index + 1}: Key contains spaces`);
       } else {
         validKeys.push(line);
       }
@@ -345,14 +345,14 @@ export default function CreateKey(){
                     helperText="Add any additional information or terms"
                   />
                   {/* tags */}
-                  <TextField
+                  {/* <TextField
                     label="Tags (comma separated)"
                     value={tags}
                     onChange={e => setTags(e.target.value)}
                     fullWidth
                     placeholder="e.g., gaming, premium, bundle"
                     helperText="Add relevant tags to help users find your listing"
-                  />
+                  /> */}
                 </Stack>
 
               </Box>

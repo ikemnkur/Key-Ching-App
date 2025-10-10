@@ -26,7 +26,9 @@ export default function NavBar() {
         {/* add key emoji to front of the
         title */}
           {/* todo: turn this text into a button/link while Maintaining its current style */}
-        <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 800, color: 'primary.main' }}>  <a href="/" style={{textDecoration: 'none'}}>🔑 Key-Ching 💰</a></Typography>
+        <Typography variant="h5" sx={{ flexGrow: 1, fontWeight: 800, color: 'primary.main' }}>
+          <Button component={RouterLink} to="/"  sx={{ fontSize: '20px' }}> 🔑 Key-Ching 💰</Button>
+        </Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
 
           {loggedIn && <Button component={RouterLink} to="/account" color="secondary" variant="outlined">Account</Button>}

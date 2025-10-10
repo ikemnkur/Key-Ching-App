@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import Listings from './pages/Listing';
 import Purchase from './pages/Purchase';
 import Info from './pages/Info';
+import SignUp2Unlock from './pages/SignUp2Unlock';
 import './styles.css';
 import { ToastProvider } from './contexts/ToastContext';
 
@@ -36,11 +37,13 @@ export default function App() {
           <Routes>
             {/* Public Routes */}
             {!(localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).loginStatus : false) && (
-            <Route path="/login" element={<Auth isLogin={true} />} />
-
-            )} 
+              <>
+                <Route path="/login" element={<Auth isLogin={true} />} />
+                <Route path="/register" element={<Auth isLogin={false} />} />
+              </>
+            )}
             {!(localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).loginStatus : false) && (
-              <Route path="/register" element={<Auth isLogin={false} />} />
+              <Route path="/unlock/:id" element={<SignUp2Unlock />} />
             )}
             <Route path="/help" element={<HelpPage />} />
             <Route path="/info" element={<Info />} />
@@ -78,7 +81,7 @@ export default function App() {
               <Route path="/" element={<Main />} />
             )}
 
-            
+
           </Routes>
         </BrowserRouter>
       </ToastProvider>

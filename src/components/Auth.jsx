@@ -40,7 +40,7 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
   const [accountType, setAccountType] = useState('buyer'); // New state for account type
 
   const navigate = useNavigate();
-  const API_URL = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:5000';
+  const API_URL = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:3001';
 
   const [userData, setUserData] = useState({
     "id": 1,

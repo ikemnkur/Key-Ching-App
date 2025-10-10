@@ -227,7 +227,7 @@ const Info = () => {
                             mb: 3
                         }}
                     >
-                        What is Clout Coin Club
+                        What is Key Ching
                     </Typography>
                     <Typography
                         variant="body1"
@@ -237,9 +237,7 @@ const Info = () => {
                             lineHeight: 1.6
                         }}
                     >
-                        It is a web app where users can upload content and monetize it. With Clout Coin, you can
-                        monetize anything digital. Have a link to share? At Clout Coin, anybody can monetize
-                        clout. If you have clout, sell it out! People will do anything for clout.
+                        Key-Ching is a platform that allows users to buy and sell digital keys securely and efficiently.
                     </Typography>
                     <Box
                         sx={{
@@ -275,11 +273,11 @@ const Info = () => {
                                 }
                             }}
                         >
-                            Log In to Clout Coin
+                            Log In to Key Ching
                         </Button>
                         <Button
                             variant="outlined"
-                            onClick={() => navigate('/dashboard')}
+                            onClick={() => navigate('/')}
                             sx={{
                                 borderColor: '#00e676',
                                 color: '#00e676',

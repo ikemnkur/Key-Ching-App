@@ -6,6 +6,7 @@ import KeyCard from '../components/KeyCard';
 import KeyRevealDialog from '../components/KeyRevealDialog';
 import { useToast } from '../contexts/ToastContext';
 import { useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function Unlock() {
 
@@ -16,6 +17,7 @@ export default function Unlock() {
   const [isUnlocking, setIsUnlocking] = useState(false);
   const { error, info, success } = useToast();
   const params = useParams();
+
 
   const userData = JSON.parse(localStorage.getItem("userdata") || '{"username":"user_123","email":"user_123@example.com"}');
 
@@ -62,12 +64,11 @@ export default function Unlock() {
         // await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Use the actual JSON Server endpoint: /createdKeys/:id
-        // const response = await fetch(`${API_URL}/api/createdKeys/${params.id}`);
         const { data } = await api.get(`/api/createdKey/${params.id}`);
-        // console.log('Fetched item:', data.key);
+        // console.log('Fetched item:', data);
         if (data) {
           setItem(data.key);
-
+          
         } else {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -82,59 +83,63 @@ export default function Unlock() {
     })();
   }, [params.id]);
 
+  const navigate = useNavigate();
+
   const handleUnlock = async (item) => {
     if (isUnlocking) return;
 
     setIsUnlocking(true);
 
-    try {
-      info('Unlocking key...');
+    navigate('/login');
 
-      // Simulate API delay
-      // await new Promise(resolve => setTimeout(resolve, 1500));
+    // try {
+    //   info('Unlocking key...');
 
-      const { data } = await api.post(`/api/unlock/${item.id}`,
-        {
-          // You can include any necessary payload here
-          username: userData.username,
-          email: userData.email,
-        }
-      );
+    //   // Simulate API delay
+    //   // await new Promise(resolve => setTimeout(resolve, 1500));
 
-      if (data?.key) {
-        setKeyValue(data.key);
-        setOpen(true);
-        success('Key unlocked successfully!');
-      } else {
-        error('Unlock failed - no key returned');
-      }
-    } catch (e) {
-      console.error('Unlock error:', e);
+    //   const { data } = await api.post(`/api/unlock/${item.id}`,
+    //     {
+    //       // You can include any necessary payload here
+    //       username: userData.username,
+    //       email: userData.email,
+    //     }
+    //   );
 
-      // Mock unlock logic for demo
-      if (Math.random() > 0.3) { // 70% success rate
-        const keys = mockKeys[item.id] || mockKeys[1];
-        const randomKey = keys[Math.floor(Math.random() * keys.length)];
-        setKeyValue(randomKey);
-        setOpen(true);
-        success('Key unlocked successfully!');
+    //   if (data?.key) {
+    //     setKeyValue(data.key);
+    //     setOpen(true);
+    //     success('Key unlocked successfully!');
+    //   } else {
+    //     error('Unlock failed - no key returned');
+    //   }
+    // } catch (e) {
+    //   console.error('Unlock error:', e);
 
-        // Update item availability
-        if (item.available > 0) {
-          setItem(prev => ({
-            ...prev,
-            available: prev.available - 1,
-            sold: prev.sold + 1
-          }));
-        }
-      } else if (Math.random() > 0.5) {
-        error('Insufficient credits to unlock this key');
-      } else {
-        error('Server error - please try again later');
-      }
-    } finally {
-      setIsUnlocking(false);
-    }
+    //   // Mock unlock logic for demo
+    //   if (Math.random() > 0.3) { // 70% success rate
+    //     const keys = mockKeys[item.id] || mockKeys[1];
+    //     const randomKey = keys[Math.floor(Math.random() * keys.length)];
+    //     setKeyValue(randomKey);
+    //     setOpen(true);
+    //     success('Key unlocked successfully!');
+
+    //     // Update item availability
+    //     if (item.available > 0) {
+    //       setItem(prev => ({
+    //         ...prev,
+    //         available: prev.available - 1,
+    //         sold: prev.sold + 1
+    //       }));
+    //     }
+    //   } else if (Math.random() > 0.5) {
+    //     error('Insufficient credits to unlock this key');
+    //   } else {
+    //     error('Server error - please try again later');
+    //   }
+    // } finally {
+    //   setIsUnlocking(false);
+    // }
   };
 
   if (loading) {
@@ -167,10 +172,10 @@ export default function Unlock() {
       <Stack spacing={4}>
         <Box>
           <Typography variant="h3" color="primary.main" gutterBottom sx={{ fontWeight: 700 }}>
-            Unlock Key
+            Login/Sign Up to Unlock Key
           </Typography>
           <Typography variant="body1" sx={{ opacity: 0.8, mb: 2 }}>
-            Review the key details and click unlock to reveal your purchased key.
+            Review the key details and click login/unlock to reveal your purchased key.
           </Typography>
         </Box>
 

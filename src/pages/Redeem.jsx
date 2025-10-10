@@ -754,9 +754,9 @@ export default function Redeem() {
                 <button style={styles.log_button} type="submit">
                   Log Your Order
                 </button>
-                <button style={styles.cancel_button} type="button" onClick={handleCancelOrder}>
+                {/* <button style={styles.cancel_button} type="button" onClick={handleCancelOrder}>
                   Cancel Order
-                </button>
+                </button> */}
               </div>
             </form>
 
@@ -924,7 +924,7 @@ export default function Redeem() {
             }}>
               {orderSubmitted ? (
                 <button
-                  onClick={() => navigate('/wallet')}
+                  onClick={() => navigate('/earings')}
                   style={{
                     ...styles.button,
                     backgroundColor: '#4caf50',
@@ -949,7 +949,7 @@ export default function Redeem() {
                     Complete Redemption
                   </button>
                   <button
-                    onClick={() => navigate('/wallet')}
+                    onClick={() => navigate('/')}
                     style={{
                       ...styles.cancel_button,
                       fontSize: '14px',

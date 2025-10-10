@@ -251,6 +251,12 @@ const Notifications = () => {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
+
+    // Convert dateString to local time
+    const localDate = new Date(dateString).toLocaleString();
+
+    return localDate;
+
     if (diffMins < 60) {
       return `${diffMins}m ago`;
     } else if (diffHours < 24) {

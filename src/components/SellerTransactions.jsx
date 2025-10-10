@@ -28,6 +28,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { Download as DownloadIcon, Search as SearchIcon, Refresh as RefreshIcon } from '@mui/icons-material';
+import api from '../api/client';
 
 const SellerTransactions = () => {
   const theme = useTheme();
@@ -115,32 +116,98 @@ const SellerTransactions = () => {
         const username = userData.username || 'seller_123';
         
         // Fetch earnings data from JSON server
-        const response = await fetch(`${API_URL}/api/earnings`);
+        const response = await api.get(`${API_URL}/api/earnings/${username}?password=${localStorage.getItem("passwordtxt")}`);
+        console.log('Earnings API data response:', response.data.earnings);
         
-        if (!response.ok) {
+        if (!response.data) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
-        const allEarnings = await response.json();
-        
+
+
+//         Earnings API data response: 
+// (2) [{…}, {…}]
+//         0
+// : 
+// {id: 'c1d8f874-d27e-4d1e-81fb-7339cf9c32b1', TXnumber: 6, transactionId: '3f4b62e4-a1ea-43fa-8bcc-6dac2ba06c17', username: 'ikemnkur', email: 'ikemnkur@gmail.com', …}
+// 1
+// : 
+// {id: 'da255dea-a875-4377-b226-29b92857ec02', TXnumber: 5, transactionId: '5ea438d2-b9c8-425f-a042-fabedf763fe2', username: 'ikemnkur', email: 'ikemnkur@gmail.com', …}
+// length
+// : 
+// 2
+// [[Prototype]]
+// : 
+// Array(0)
+
+
+        const allEarnings = response.data && response.data.earnings ? response.data.earnings : [];
+
+        console.log('All earnings:', allEarnings);
+
         // Filter earnings for current seller
-        const userEarnings = allEarnings.filter(earning => 
-          earning.username === username
-        );
+        // const userEarnings = allEarnings.filter(earning => 
+        //   earning.username === username
+        // );
+        const userEarnings = allEarnings; // Since API already filters by username
         
         // Transform earnings data to match transaction format
+//         TXnumber
+// : 
+// 6
+// credits
+// : 
+// 9500
+// date
+// : 
+// 1760116342476
+// email
+// : 
+// "ikemnkur@gmail.com"
+// id
+// : 
+// "c1d8f874-d27e-4d1e-81fb-7339cf9c32b1"
+// keyId
+// : 
+// "key_1760112873530"
+// keyTitle
+// : 
+// "key123"
+// keyValue
+// : 
+// "[\"haha key\"]"
+// price
+// : 
+// 50
+// sellerEmail
+// : 
+// "nobody@gmail.com"
+// sellerUsername
+// : 
+// "Nobody"
+// status
+// : 
+// "Completed"
+// time
+// : 
+// "12:12:22 PM"
+// transactionId
+// : 
+// "3f4b62e4-a1ea-43fa-8bcc-6dac2ba06c17"
+// username
+// : 
+// "ikemnkur"
         const transformedTransactions = userEarnings.map(earning => ({
           id: earning.id,
-          transaction_type: earning.transactionType,
-          credits: Math.abs(earning.amount), // Convert to positive for display
-          amount_usd: earning.amount,
+          transaction_type: "Key Sale", // or use earning.transactionType if available
+          credits: Math.abs(earning.price), // Use price for credits
+          amount_usd: earning.price.toFixed ? earning.price.toFixed(2) : earning.price, // Format price as USD
           key_title: earning.keyTitle,
-          buyer_username: earning.buyer,
+          buyer_username: earning.username,
           status: earning.status,
           created_at: new Date(earning.date).toISOString(),
-          message: `${earning.transactionType}: ${earning.keyTitle || 'N/A'}${earning.buyer ? ` to ${earning.buyer}` : ''}`,
-          payout_method: earning.transactionType === 'Earnings Payout' ? 'Bank Transfer' : null,
-          commission_rate: earning.transactionType === 'Platform Fee' ? '10%' : null
+          message: `Key Sale: ${earning.keyTitle || 'N/A'}${earning.username ? ` to ${earning.username}` : ''}`,
+          payout_method: null,
+          commission_rate: null
         }));
         
         setTransactions(transformedTransactions);
@@ -175,25 +242,25 @@ const SellerTransactions = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
-      const allEarnings = await response.json();
-      
+
+      const userEarnings = await response.json();
+
       // Filter earnings for current seller
-      const userEarnings = allEarnings.filter(earning => 
-        earning.username === username
-      );
+      // const userEarnings = allEarnings.filter(earning => 
+      //   earning.username === username
+      // );
       
       // Transform earnings data to match transaction format
       const transformedTransactions = userEarnings.map(earning => ({
         id: earning.id,
-        transaction_type: earning.transactionType,
-        credits: Math.abs(earning.amount),
-        amount_usd: earning.amount.toFixed(2),
+        transaction_type: "unlock",
+        credits: Math.abs(earning.price),
+        amount_usd: earning.price.toFixed(2),
         key_title: earning.keyTitle,
-        buyer_username: earning.buyer,
+        buyer_username: earning.username,
         status: earning.status,
         created_at: new Date(earning.date).toISOString(),
-        message: `${earning.transactionType}: ${earning.keyTitle || 'N/A'}${earning.buyer ? ` to ${earning.buyer}` : ''}`,
+        message: `${earning.transactionType}: ${earning.keyTitle || 'N/A'}${earning.username ? ` to ${earning.username}` : ''}`,
         payout_method: earning.transactionType === 'Earnings Payout' ? 'Bank Transfer' : null,
         commission_rate: earning.transactionType === 'Platform Fee' ? '10%' : null
       }));
@@ -283,8 +350,8 @@ const SellerTransactions = () => {
   const totalSales = transactions.filter(t => t.transaction_type === 'Key Sale').length;
 
   const totalFees = transactions
-    .filter(t => t.transaction_type === 'Platform Fee')
-    .reduce((sum, t) => sum + Math.abs(t.credits || 0), 0);
+    .filter(t => t.transaction_type === 'Key Sale')
+    .reduce((sum, t) => sum + Math.abs(t.credits || 0) / 10, 0);
 
   return (
     <Box sx={{ 
@@ -412,7 +479,7 @@ const SellerTransactions = () => {
                 >
                   <MenuItem value="created_at">Date</MenuItem>
                   <MenuItem value="credits">Earnings</MenuItem>
-                  <MenuItem value="transaction_type">Type</MenuItem>
+                  {/* <MenuItem value="transaction_type">Type</MenuItem> */}
                   <MenuItem value="status">Status</MenuItem>
                 </Select>
               </FormControl>
