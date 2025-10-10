@@ -1,8 +1,10 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Box, Button } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function NavBar() {
+  const navigate = useNavigate();
 
   const accountType = localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).accountType : null; // 'buyer', 'seller', or null
   const loggedIn = !!accountType;
@@ -12,11 +14,11 @@ export default function NavBar() {
     localStorage.removeItem('userdata');
     localStorage.removeItem('accountType');
     localStorage.removeItem('unlockedKeys'); // Clear unlocked keys on logout
-    window.location.href = '/login'; // Redirect to login page
+    navigate('/login'); // Redirect to login page
   }
 
   function handleLogin() {
-    window.location.href = '/login'; // Redirect to login page
+    navigate('/login'); // Redirect to login page
   }
 
   return (
