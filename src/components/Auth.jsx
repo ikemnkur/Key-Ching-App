@@ -88,13 +88,13 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
       const userData = JSON.parse(userdata);
 
       // Fetch latest user data from JSON server
-      const response = await fetch(`http://localhost:3001/api/userData/${userData.id}`);
+      const response = await api.get(`/api/userData/${userData.id}`);
 
-      if (!response.ok) {
+      if (response.status !== 200) {
         throw new Error('Failed to fetch user profile');
       }
 
-      const profile = await response.json();
+      const profile = response.data;
       const updatedUserData = {
         ...profile,
         birthDate: profile.birthDate ? profile.birthDate.split('T')[0] : '',

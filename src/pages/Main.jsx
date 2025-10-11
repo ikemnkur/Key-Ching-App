@@ -63,7 +63,7 @@ export default function Wallet() {
     return (
         <Container sx={{ py: 4, backgroundColor: '#0a0a0a', minHeight: '100vh' }}>
             <Stack spacing={2}>
-                <Typography variant="h4" sx={{ color: '#ffd700', fontWeight: 700 }}>Main</Typography>
+                {/* <Typography variant="h4" sx={{ color: '#ffd700', fontWeight: 700 }}>Main</Typography> */}
                 <Card variant="outlined" sx={{
                     backgroundColor: '#1a1a1a',
                     border: '2px solid #ffd700',
