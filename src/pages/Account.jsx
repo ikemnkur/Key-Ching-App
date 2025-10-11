@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { Save as SaveIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import api from '../api/client';
 
 const AccountPage = () => {
   const [userData, setUserData] = useState({
@@ -31,6 +32,7 @@ const AccountPage = () => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:3001';
@@ -89,39 +91,95 @@ const AccountPage = () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file type and size (max 1MB)
+    // Validate file type and size (max 2MB)
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       setSnackbarMessage('Error: Images Only!');
       setOpenSnackbar(true);
       return;
     }
-    if (file.size > 1024 * 1024) {
-      setSnackbarMessage('Error: Max file size is 1MB');
+    if (file.size > 2 * 1024 * 1024) {
+      setSnackbarMessage('Error: Max file size is 2MB');
       setOpenSnackbar(true);
       return;
     }
+
+    // Reduce image resolution to max 512*512 while maintaining aspect ratio
+    const img = document.createElement('img');
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      img.src = e.target.result;
+
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        const maxDimension = 512;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDimension) {
+            height *= maxDimension / width;
+            width = maxDimension;
+          }
+        } else {
+          if (height > maxDimension) {
+            width *= maxDimension / height;
+            height = maxDimension;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(async (blob) => {
+          if (blob) {
+            await uploadProfilePicture(new File([blob], file.name, { type: file.type }));
+          } else {
+            setSnackbarMessage('Error processing image');
+            setOpenSnackbar(true);
+          }
+        }, file.type, 0.8); // Added quality parameter for better compression
+      };
+    };
+    
+    // Read the file only once
+    reader.readAsDataURL(file);
+  };
+
+
+  // Upload profile picture to server
+  const uploadProfilePicture = async (file) => {
 
     setUploading(true);
     try {
       const formData = new FormData();
       formData.append('profilePicture', file);
 
-      const response = await fetch(
+      // Upload using the api client  
+      const response = await api.post(
         `${API_URL}/api/profile-picture/${userData.username}`,
-        {
-          method: 'POST',
-          body: formData,
-        }
+        formData
       );
 
-      const result = await response.json();
-      if (response.ok && result.url) {
+      // const response = await api.post(
+      //   `${API_URL}/api/profile-picture/${userData.username}`,
+      //   {
+      //     method: 'POST',
+      //     body: formData,
+      //   }
+      // );
+
+      const result = await response.data;
+      if (response.status === 200 && result.url) {
         setUserData((prev) => ({
           ...prev,
           profilePicture: result.url,
         }));
         setSnackbarMessage('Profile picture updated!');
+        console.log(result.url);
       } else {
         setSnackbarMessage(result.message || 'Upload failed');
       }
@@ -130,6 +188,49 @@ const AccountPage = () => {
     } finally {
       setOpenSnackbar(true);
       setUploading(false);
+    }
+  };
+
+  // Handle input field changes
+  const handleInputChange = (field) => (event) => {
+    setUserData(prev => ({
+      ...prev,
+      [field]: event.target.value
+    }));
+  };
+
+  // Save profile changes
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    try {
+      const response = await fetch(`${API_URL}/api/userData/${userData.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+          bio: userData.bio,
+          phoneNumber: userData.phoneNumber
+        })
+      });
+
+      if (response.ok) {
+        const updatedUser = await response.json();
+        // Update localStorage
+        localStorage.setItem('userdata', JSON.stringify(updatedUser));
+        setSnackbarMessage('Profile updated successfully!');
+      } else {
+        setSnackbarMessage('Error: Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+      setSnackbarMessage('Error: Could not save changes');
+    } finally {
+      setSaving(false);
+      setOpenSnackbar(true);
     }
   };
 
@@ -210,6 +311,7 @@ const AccountPage = () => {
               fullWidth
               label="First Name"
               value={userData.firstName}
+              onChange={handleInputChange('firstName')}
               margin="normal"
               sx={{
                 '& .MuiOutlinedInput-root': {
@@ -227,6 +329,7 @@ const AccountPage = () => {
               fullWidth
               label="Last Name"
               value={userData.lastName}
+              onChange={handleInputChange('lastName')}
               margin="normal"
               sx={{
                 '& .MuiOutlinedInput-root': {
@@ -244,6 +347,25 @@ const AccountPage = () => {
               fullWidth
               label="Email"
               value={userData.email}
+              onChange={handleInputChange('email')}
+              margin="normal"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: '#2a2a2a',
+                  color: '#fff',
+                  '& fieldset': { borderColor: '#555' },
+                  '&:hover fieldset': { borderColor: '#ffd700' },
+                  '&.Mui-focused fieldset': { borderColor: '#ffd700' }
+                },
+                '& .MuiInputLabel-root': { color: '#ccc' }
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label="Phone Number"
+              value={userData.phoneNumber}
+              onChange={handleInputChange('phoneNumber')}
               margin="normal"
               sx={{
                 '& .MuiOutlinedInput-root': {
@@ -261,6 +383,7 @@ const AccountPage = () => {
               fullWidth
               label="Bio"
               value={userData.bio}
+              onChange={handleInputChange('bio')}
               multiline
               rows={3}
               margin="normal"
@@ -275,6 +398,32 @@ const AccountPage = () => {
                 '& .MuiInputLabel-root': { color: '#ccc' }
               }}
             />
+
+            {/* Save Button */}
+            <Box sx={{ mt: 3, textAlign: 'center' }}>
+              <Button
+                variant="contained"
+                startIcon={<SaveIcon />}
+                onClick={handleSaveProfile}
+                disabled={saving}
+                sx={{
+                  backgroundColor: '#ffd700',
+                  color: '#000',
+                  fontWeight: 700,
+                  px: 4,
+                  py: 1.5,
+                  '&:hover': {
+                    backgroundColor: '#ffed4e'
+                  },
+                  '&:disabled': {
+                    backgroundColor: '#666',
+                    color: '#999'
+                  }
+                }}
+              >
+                {saving ? <CircularProgress size={20} sx={{ color: '#999' }} /> : 'Save Changes'}
+              </Button>
+            </Box>
           </Paper>
         </Grid>
 
