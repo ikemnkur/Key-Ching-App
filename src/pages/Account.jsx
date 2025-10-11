@@ -30,6 +30,7 @@ const AccountPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:3001';
@@ -83,6 +84,55 @@ const AccountPage = () => {
     );
   }
 
+  // Handle profile picture upload
+  const handleProfilePicChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type and size (max 1MB)
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setSnackbarMessage('Error: Images Only!');
+      setOpenSnackbar(true);
+      return;
+    }
+    if (file.size > 1024 * 1024) {
+      setSnackbarMessage('Error: Max file size is 1MB');
+      setOpenSnackbar(true);
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+
+      const response = await fetch(
+        `${API_URL}/api/profile-picture/${userData.username}`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+
+      const result = await response.json();
+      if (response.ok && result.url) {
+        setUserData((prev) => ({
+          ...prev,
+          profilePicture: result.url,
+        }));
+        setSnackbarMessage('Profile picture updated!');
+      } else {
+        setSnackbarMessage(result.message || 'Upload failed');
+      }
+    } catch (err) {
+      setSnackbarMessage('Upload failed');
+    } finally {
+      setOpenSnackbar(true);
+      setUploading(false);
+    }
+  };
+
   return (
     <Box sx={{ 
       maxWidth: 1200, 
@@ -135,6 +185,26 @@ const AccountPage = () => {
                 border: '3px solid #ffd700'
               }}
             />
+            <Box sx={{ textAlign: 'center', mb: 3 }}> 
+              <Button
+                variant="contained"
+                component="label"
+                sx={{ backgroundColor: '#444', '&:hover': { backgroundColor: '#555' } }}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <CircularProgress size={24} sx={{ color: '#ffd700' }} />
+                ) : (
+                  'Change Profile Picture'
+                )}
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={handleProfilePicChange}
+                />
+              </Button>
+            </Box>
 
             <TextField
               fullWidth
@@ -269,9 +339,9 @@ const AccountPage = () => {
         onClose={() => setOpenSnackbar(false)}
       >
         <Alert 
-          severity="success"
+          severity={snackbarMessage.startsWith('Error') ? 'error' : 'success'}
           sx={{ 
-            backgroundColor: '#4caf50',
+            backgroundColor: snackbarMessage.startsWith('Error') ? '#f44336' : '#4caf50',
             color: '#fff'
           }}
         >
