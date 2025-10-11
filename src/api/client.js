@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 
-const api = axios.create({ baseURL: import.meta.env.VITE_API_SERVER_URL });
+const api = axios.create({ baseURL: import.meta.env.VITE_API_SERVER_URL || 'http://localhost:3001' });
 
 
 // Attach auth token if you add auth later

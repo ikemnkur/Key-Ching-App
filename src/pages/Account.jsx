@@ -26,6 +26,7 @@ const AccountPage = () => {
     bio: '',
     credits: 0,
     accountType: '',
+    profilePicture: '',
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -60,6 +61,7 @@ const AccountPage = () => {
             bio: currentUser.bio || '',
             credits: currentUser.credits || 0,
             accountType: currentUser.accountType || 'buyer',
+            profilePicture: currentUser.profilePicture || '',
           });
         }
       } catch (error) {
