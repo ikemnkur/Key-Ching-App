@@ -160,7 +160,8 @@ export default function CreateKey(){
       description,
       expiration_days: expirationDays || undefined,
       tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-      encryptionKey: userData?.encryptionKey || ''
+      encryptionKey: userData?.encryptionKey || '',
+      profilepic: userData?.profilePicture || ''
     };
 
     try {
