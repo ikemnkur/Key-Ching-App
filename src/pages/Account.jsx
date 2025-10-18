@@ -100,7 +100,7 @@ const AccountPage = () => {
       setOpenSnackbar(true);
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > 5 * 1024 * 1024) {
       setSnackbarMessage('Error: Max file size is 2MB');
       setOpenSnackbar(true);
       return;
@@ -166,6 +166,8 @@ const AccountPage = () => {
         formData
       );
 
+      console.log("Upload response:", response);
+
       // const response = await api.post(
       //   `${API_URL}/api/profile-picture/${userData.username}`,
       //   {
@@ -186,6 +188,7 @@ const AccountPage = () => {
         setSnackbarMessage(result.message || 'Upload failed');
       }
     } catch (err) {
+      console.error('Upload error:', err);
       setSnackbarMessage('Upload failed');
     } finally {
       setOpenSnackbar(true);
