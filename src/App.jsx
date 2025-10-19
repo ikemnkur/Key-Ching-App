@@ -22,6 +22,7 @@ import Listings from './pages/Listing';
 import Purchase from './pages/Purchase';
 import Info from './pages/Info';
 import SignUp2Unlock from './pages/SignUp2Unlock';
+import LoadingPage from './pages/Loading';
 import './styles.css';
 import { ToastProvider } from './contexts/ToastContext';
 
@@ -81,6 +82,8 @@ export default function App() {
               <Route path="/" element={<Main />} />
             )}
 
+            {/* need a redirect or fallback route if not logged in and the user tries to visit a protected route */}
+            <Route path="*" element={<LoadingPage />} />
 
           </Routes>
         </BrowserRouter>
