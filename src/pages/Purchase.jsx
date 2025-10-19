@@ -505,7 +505,7 @@ async function getTransactionDetails(txHash, depositAddress, blockchain) {
 async function checkTransaction() {
   const transactionId = userDetails.transactionId?.trim();
   const senderWalletAddr = userDetails.walletAddress?.trim(); // User's sending wallet
-  const expectedAmount = parseFloat(amount);
+  const expectedAmount = parseFloat(cryptoAmount);
   const curr = currency;
 
   try {
@@ -554,6 +554,8 @@ async function checkTransaction() {
       return false;
     }
 
+    // console.log("Matching transaction found: ", matchingTx);
+
     // Get detailed transaction info
     const details = await getTransactionDetails(
       matchingTx.hash, 
@@ -580,7 +582,7 @@ async function checkTransaction() {
     console.log(`Sender Match: ${senderMatches ? '✅ YES' : '❌ NO'}`);
 
     // Verify the amount matches (with small tolerance for rounding)
-    const amountMatches = Math.abs(details.amountReceived - expectedAmount) < 0.00000001;
+    const amountMatches = Math.abs(details.amountReceived - expectedAmount) < 0.005;
     console.log(`Expected Amount: ${expectedAmount} ${curr}`);
     console.log(`Amount Match: ${amountMatches ? '✅ YES' : '❌ NO'}`);
 
@@ -1051,19 +1053,6 @@ async function checkTransaction() {
                 </small>
               </div>
 
-              <div style={styles.formGroup}>
-                <label>Transaction Date (optional):</label>
-                <input
-                  name="transactionDate"
-                  type="date"
-                  value={userDetails.transactionDate || ''}
-                  onChange={handleInputChange}
-                  style={styles.input}
-                />
-                <small style={{ color: '#cccccc', fontSize: '12px' }}>
-                  Date when you sent the transaction
-                </small>
-              </div>
 
               {/* Optional */}
               <div>
@@ -1073,6 +1062,7 @@ async function checkTransaction() {
                 </p>
               </div>
 
+              
               <div style={styles.formGroup}>
                 <label>Transaction Time (optional):</label>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -1105,6 +1095,22 @@ async function checkTransaction() {
                   Time when you sent the transaction (HH:MM AM/PM format)
                 </small>
               </div>
+{/* 
+              <div style={styles.formGroup}>
+                <label>Transaction Date (optional):</label>
+                <input
+                  name="transactionDate"
+                  type="date"
+                  value={userDetails.transactionDate || ''}
+                  onChange={handleInputChange}
+                  style={styles.input}
+                />
+                <small style={{ color: '#cccccc', fontSize: '12px' }}>
+                  Date when you sent the transaction
+                </small>
+              </div> */}
+
+
 
               <div style={styles.formGroup}>
                 <label>Block Explorer Link (optional):</label>
