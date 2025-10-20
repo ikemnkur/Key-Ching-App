@@ -1,3 +1,4 @@
+// require('dotenv').config();
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { PhotoCamera } from '@mui/icons-material';
@@ -6,8 +7,18 @@ import api from '../api/client';
 import { uploadTransactionScreenshot } from '../api/api';
 import { useToast } from '../contexts/ToastContext';
 import axios from 'axios';
+// import dotenv from 'dotenv';
+
+
+// dotenv.config();
+
+
+
+const BLOCKCHAIR_API_KEY = import.meta.env.VITE_BLOCKCHAIR_API_KEY;
 
 export default function Purchase() {
+
+
 
   const promoPackagesMap = [
     { amount: 2000, price: 2.5, popular: false },
@@ -79,7 +90,7 @@ export default function Purchase() {
 
 
   // Calculate the amount in USD and crypto
-  const dollarValueOfCoins = price ; // Assuming 1000 coins = $1
+  const dollarValueOfCoins = price; // Assuming 1000 coins = $1
   const cryptoAmount = rate ? (dollarValueOfCoins / rate).toFixed(8) : '0.00000000'; // Amount of crypto to send
 
   const load = async () => {
@@ -408,217 +419,442 @@ export default function Purchase() {
 
 
 
-  // --- Helper function to fetch all transactions for an address and filter by date ---
-async function getAllTransactionsForLastHour(depositAddress, blockchain) {
-  let allTransactions = [];
-  let offset = 0;
-  const limit = 10;
-  const oneHourAgo = new Date();
-  oneHourAgo.setHours(oneHourAgo.getHours() - 4); // Get date 4 hours ago
+  // // --- Helper function to fetch all transactions for an address and filter by date ---
+  async function getAllTransactionsForLastHour(depositAddress, blockchain) {
+    let allTransactions = [];
+    let offset = 0;
+    const limit = 10;
+    const oneHourAgo = new Date();
+    oneHourAgo.setHours(oneHourAgo.getHours() - 4); // or use 1 hour if desired
 
-  while (true) {
-    const url = `https://api.blockchair.com/${blockchain}/dashboards/address/${depositAddress}?transaction_details=true&limit=${limit}&offset=${offset}`;
+    while (true) {
+      // const url = `https://api.blockchair.com/${blockchain}/dashboards/address/${depositAddress}?transaction_details=true&limit=${limit}&offset=${offset}&key=${BLOCKCHAIR_API_KEY}`;
+      const url = `https://api.blockchair.com/${blockchain}/dashboards/address/${depositAddress}?transaction_details=true&limit=${limit}&offset=${offset}`;
+
+      try {
+        const response = await axios.get(url);
+        const data = response.data;
+
+        if (!data?.data?.[depositAddress]?.transactions) {
+          console.warn(`Blockchair API response for ${depositAddress} was incomplete or empty.`);
+          break;
+        }
+
+        const fetchedTransactions = data.data[depositAddress].transactions;
+
+        console.log(
+          "Current balance:",
+          data.data[depositAddress].address.balance / 1e8,
+          blockchain.toUpperCase()
+        );
+        console.log(`Fetched ${fetchedTransactions.length} transactions from Blockchair for ${depositAddress} at offset ${offset}`);
+
+        if (fetchedTransactions.length === 0) break;
+
+        // Filter transactions by time
+        const recentTransactions = fetchedTransactions.filter(tx => {
+          const txDate = new Date(tx.time);
+          return txDate >= oneHourAgo;
+        });
+
+        allTransactions.push(...recentTransactions);
+
+        // Stop if we’ve reached the end
+        if (fetchedTransactions.length < limit || recentTransactions.length < fetchedTransactions.length) {
+          break;
+        }
+
+        offset += limit;
+      } catch (error) {
+        console.error(`Error fetching transactions from Blockchair for ${depositAddress}:`, error.response?.data || error.message);
+        break;
+      }
+    }
+
+    return allTransactions;
+  }
+
+
+  // /**
+  //  * Find incoming BTC/LTC transactions to `depositAddress` within a recent window,
+  //  * matching a specific amount (in native units, e.g. 0.015 BTC) and optional sender address.
+  //  *
+  //  * @param {Object} params
+  //  * @param {"bitcoin"|"litecoin"} params.blockchain - Blockchair chain slug
+  //  * @param {string} params.depositAddress - The address you own
+  //  * @param {number} [params.hoursAgo=1] - Lookback window in hours
+  //  * @param {number} params.amount - Amount expected (in BTC/LTC units, NOT satoshis)
+  //  * @param {string} [params.fromAddress] - Optional: require at least one input from this address
+  //  * @param {number} [params.maxPages=10] - Safety cap on pagination pages
+  //  * @returns {Promise<Array>} - Matching transactions with useful fields
+  //  */
+  // async function findIncomingTransactions({
+  //   blockchain,
+  //   depositAddress,
+  //   hoursAgo = 1,
+  //   amount,
+  //   fromAddress,
+  //   maxPages = 10,
+  // }) {
+  //   const SATS_PER_COIN = 1e8; // both BTC and LTC use 8 decimals
+  //   const amountSats = Math.round(amount * SATS_PER_COIN);
+
+  //   const cutoff = new Date(Date.now() - hoursAgo * 3600 * 1000);
+
+  //   const limit = 50; // address listing page size (higher reduces pagination)
+  //   let offset = 0;
+  //   let pageCount = 0;
+  //   const matches = [];
+
+  //   while (pageCount < maxPages) {
+  //     // 1) Get a page of tx hashes for the address
+  //     const url = `https://api.blockchair.com/${blockchain}/dashboards/address/${depositAddress}?transaction_details=false&limit=${limit}&offset=${offset}&key=${BLOCKCHAIR_API_KEY}`;
+  //     let addressData;
+
+  //     try {
+  //       const res = await axios.get(url);
+  //       addressData = res?.data?.data?.[depositAddress];
+  //       if (!addressData) break;
+  //     } catch (e) {
+  //       console.error(`Address page fetch failed: ${e.message}`);
+  //       break;
+  //     }
+
+  //     const txHashes = addressData.transactions || [];
+  //     if (txHashes.length === 0) break;
+
+  //     // 2) Batch fetch full details for these transactions
+  //     // Blockchair supports multi-IDs by comma-joining hashes
+  //     // We’ll chunk to avoid URL length issues (safe chunk size ~20)
+  //     const chunkSize = 20;
+  //     for (let i = 0; i < txHashes.length; i += chunkSize) {
+  //       const chunk = txHashes.slice(i, i + chunkSize);
+  //       const txUrl = `https://api.blockchair.com/${blockchain}/dashboards/transactions/${chunk.join(",")}`;
+
+  //       let txData;
+  //       try {
+  //         const res = await axios.get(txUrl);
+  //         txData = res?.data?.data || {};
+  //       } catch (e) {
+  //         console.error(`Tx details fetch failed: ${e.message}`);
+  //         continue;
+  //       }
+
+  //       // 3) Inspect each transaction for time, amount to depositAddress, and optional sender
+  //       for (const hash of chunk) {
+  //         const t = txData[hash];
+  //         if (!t) continue;
+
+  //         const txInfo = t.transaction;         // includes .time, .hash, etc.
+  //         const inputs = t.inputs || [];        // array with .recipient and .value (sats)
+  //         const outputs = t.outputs || [];      // array with .recipient and .value (sats)
+
+  //         // time filter
+  //         const txTime = new Date(txInfo.time);
+  //         if (!(txTime >= cutoff)) continue;
+
+  //         // sum received to our depositAddress in this tx
+  //         const receivedToDeposit = outputs
+  //           .filter(o => o.recipient === depositAddress)
+  //           .reduce((s, o) => s + (o.value || 0), 0);
+
+  //         if (receivedToDeposit !== amountSats) continue;
+
+  //         // optional sender check: require at least one input from fromAddress
+  //         if (fromAddress) {
+  //           const hasSender = inputs.some(inp => inp.recipient === fromAddress);
+  //           if (!hasSender) continue;
+  //         }
+
+  //         // If we get here, it matches!
+  //         matches.push({
+  //           hash: txInfo.hash,
+  //           time: txInfo.time,
+  //           block_id: txInfo.block_id,
+  //           received_sats: receivedToDeposit,
+  //           received_coins: receivedToDeposit / SATS_PER_COIN,
+  //           from_addresses: Array.from(
+  //             new Set(inputs.map(inp => inp.recipient).filter(Boolean))
+  //           ),
+  //           to_addresses: Array.from(
+  //             new Set(outputs.map(out => out.recipient).filter(Boolean))
+  //           ),
+  //         });
+  //       }
+  //     }
+
+  //     // Early exit: if the newest tx in this page is already older than cutoff,
+  //     // further pages will be even older.
+  //     // (We can approximate by checking the first transaction’s details.)
+  //     // But since we didn’t request details here, we conservatively continue
+  //     // unless we already found matches. If you want to be stricter, you can
+  //     // add a lightweight time check via a small details call.
+
+  //     // Pagination
+  //     offset += limit;
+  //     pageCount += 1;
+  //   }
+
+  //   return matches;
+  // }
+
+  // /** Convenience wrapper similar to your original name/signature */
+  // async function getAllTransactionsForLastHour(depositAddress, blockchain) {
+  //   // Kept for compatibility; returns transactions in the last 1 hour
+  //   return findIncomingTransactions({
+  //     blockchain,
+  //     depositAddress,
+  //     hoursAgo: 1,
+  //     amount: 0, // set to 0 to disable amount filtering here
+  //     // senderAddresses: userDetails.walletAddress ? [userDetails.walletAddress.trim()] : [],
+  //   });
+  // }
+
+  async function getTransactionDetails(time, cryptoAmount, senderAddresses, depositAddress, blockchain) {
     try {
+      // fetch transsaction from blockchair from the deposit address
+      const url = `https://api.blockchair.com/${blockchain}/dashboards/address/${depositAddress}?transaction_details=true`;
       const response = await axios.get(url);
       const data = response.data;
 
       if (!data || !data.data || !data.data[depositAddress] || !data.data[depositAddress].transactions) {
-        console.warn(`Blockchair API response for ${depositAddress} was incomplete or empty.`);
-        break;
+        console.error(`No transaction data found for ${depositAddress}`);
+        return null;
       }
 
-      const fetchedTransactions = data.data[depositAddress].transactions;
-
-      console.log("Current balance:", data.data[depositAddress].address.balance / 100000000, blockchain.toUpperCase());
-      console.log(`Fetched ${fetchedTransactions.length} transactions from Blockchair for ${depositAddress} at offset ${offset}`);
-
-      if (fetchedTransactions.length === 0) {
-        break;
-      }
-
-      // Filter transactions from the last 4 hours
-      const recentTransactions = fetchedTransactions.filter(tx => {
+      // Find transactions that match the time and sender address
+      const matchingTxs = data.data[depositAddress].transactions.filter(tx => {
         const txDate = new Date(tx.time);
-        return txDate >= oneHourAgo;
+        const inputAddresses = tx.inputs.map(input => input.recipient);
+        const timeMatch = Math.abs(txDate - new Date(time)) < 15 * 60 * 1000; // within 15 minutes
+        const senderMatch = senderAddresses.some(addr => inputAddresses.includes(addr));
+        return timeMatch && senderMatch;
       });
 
-      allTransactions.push(...recentTransactions);
-
-      if (fetchedTransactions.length < limit || recentTransactions.length < fetchedTransactions.length) {
-        break;
+      if (matchingTxs.length === 0) {
+        console.warn(`No matching transactions found for ${depositAddress} at specified time and sender addresses.`);
+        return null;
       }
 
-      offset += limit;
+      // Further filter by amount received
+      for (const tx of matchingTxs) {
+        const receivedOutputs = tx.outputs.filter(output => output.recipient === depositAddress);
+        const totalReceived = receivedOutputs.reduce((sum, output) => sum + output.value, 0);
+        const amountInCrypto = totalReceived / 100000000; // Convert satoshis to main currency
+
+        if (Math.abs(amountInCrypto - cryptoAmount) < 0.01) { // small tolerance
+          return {
+            hash: tx.hash,
+            time: tx.time,
+            block: tx.block_id,
+            confirmations: tx.confirmations || 0,
+            amountReceived: amountInCrypto,
+            amountReceivedSatoshis: totalReceived,
+            senderAddresses: senderAddresses,
+            outputs: receivedOutputs
+          };
+        }
+      }
+
+      console.warn(`No transactions matched the expected amount for ${depositAddress}.`);
+      return null;
+
     } catch (error) {
-      console.error(`Error fetching transactions from Blockchair for ${depositAddress}:`, error.message);
-      break;
-    }
-  }
-  return allTransactions;
-}
-
-// --- Function to get detailed transaction info including amount received ---
-async function getTransactionDetails(txHash, depositAddress, blockchain) {
-  try {
-    const url = `https://api.blockchair.com/${blockchain}/dashboards/transaction/${txHash}`;
-    const response = await axios.get(url);
-    const txData = response.data.data[txHash];
-
-    if (!txData) {
-      console.error(`No transaction data found for ${txHash}`);
+      console.error(`Error fetching transaction details for ${depositAddress}:`, error.message);
       return null;
     }
-
-    // Find outputs that go to our deposit address
-    const receivedOutputs = txData.outputs.filter(output =>
-      output.recipient === depositAddress
-    );
-
-    // Calculate total amount received
-    const totalReceived = receivedOutputs.reduce((sum, output) =>
-      sum + output.value, 0
-    );
-
-    // Convert satoshis to main currency (LTC/BTC)
-    const amountInCrypto = totalReceived / 100000000;
-
-    // Find inputs to determine sender addresses
-    const senderAddresses = txData.inputs.map(input => input.recipient).filter(Boolean);
-
-    return {
-      hash: txHash,
-      time: txData.transaction.time,
-      block: txData.transaction.block_id,
-      confirmations: txData.transaction.confirmations || 0,
-      amountReceived: amountInCrypto,
-      amountReceivedSatoshis: totalReceived,
-      senderAddresses: senderAddresses,
-      outputs: receivedOutputs
-    };
-  } catch (error) {
-    console.error(`Error fetching transaction details for ${txHash}:`, error.message);
-    return null;
   }
-}
 
-// Main transaction checking function
-async function checkTransaction() {
-  const transactionId = userDetails.transactionId?.trim();
-  const senderWalletAddr = userDetails.walletAddress?.trim(); // User's sending wallet
-  const expectedAmount = parseFloat(cryptoAmount);
-  const curr = currency;
 
-  try {
-    // Validate inputs
-    if (!transactionId || !senderWalletAddr || !expectedAmount || !curr) {
-      throw new Error('Please fill in all required fields');
-    }
 
-    // Get deposit info for this currency
-    const depositInfo = depositWalletAddressMap[curr];
-    if (!depositInfo) {
-      throw new Error('Unsupported cryptocurrency');
-    }
 
-    // Check if user entered our deposit address by mistake
-    if (senderWalletAddr === depositInfo.address) {
-      setTransactionStatus('failed');
-      setValidationMessage(
-        `The wallet address you entered is our deposit address. Please enter the address you sent FROM.`
+  // // --- Function to get detailed transaction info including amount received ---
+  // async function getTransactionDetails(txHash, depositAddress, blockchain) {
+  //   try {
+  //     const url = `https://api.blockchair.com/${blockchain}/dashboards/transaction/${txHash}`;
+  //     const response = await axios.get(url);
+  //     const txData = response.data.data[txHash];
+
+  //     if (!txData) {
+  //       console.error(`No transaction data found for ${txHash}`);
+  //       return null;
+  //     }
+
+  //     // console.log("Deposit Address:", depositAddress)
+
+  //     // Find outputs that go to our deposit address
+  //     const receivedOutputs = txData.outputs.filter(output =>
+  //       output.recipient === depositAddress
+  //     );
+
+  //     // Calculate total amount received
+  //     const totalReceived = receivedOutputs.reduce((sum, output) =>
+  //       sum + output.value, 0
+  //     );
+
+  //     // Convert satoshis to main currency (LTC/BTC)
+  //     const amountInCrypto = totalReceived / 100000000;
+
+  //     // Find inputs to determine sender addresses
+  //     const senderAddresses = txData.inputs.map(input => input.recipient).filter(Boolean);
+
+  //     return {
+  //       hash: txHash,
+  //       time: txData.transaction.time,
+  //       block: txData.transaction.block_id,
+  //       confirmations: txData.transaction.confirmations || 0,
+  //       amountReceived: amountInCrypto,
+  //       amountReceivedSatoshis: totalReceived,
+  //       senderAddresses: senderAddresses,
+  //       outputs: receivedOutputs
+  //     };
+  //   } catch (error) {
+  //     console.error(`Error fetching transaction details for ${txHash}:`, error.message);
+  //     return null;
+  //   }
+  // }
+
+  // Main transaction checking function
+  async function checkTransaction() {
+    const transactionId = userDetails.transactionId?.trim();
+    const senderWalletAddr = userDetails.walletAddress?.trim(); // User's sending wallet
+    const expectedAmount = parseFloat(cryptoAmount);
+    const curr = currency;
+
+    try {
+      // Validate inputs
+      if (!transactionId || !senderWalletAddr || !expectedAmount || !curr) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      // Get deposit info for this currency
+      const depositInfo = depositWalletAddressMap[curr];
+      if (!depositInfo) {
+        throw new Error('Unsupported cryptocurrency');
+      }
+
+      // Check if user entered our deposit address by mistake
+      if (senderWalletAddr === depositInfo.address) {
+        setTransactionStatus('failed');
+        setValidationMessage(
+          `The wallet address you entered is our deposit address. Please enter the address you sent FROM.`
+        );
+        return false;
+      }
+
+      console.log(`\n=== Verifying Payment ===`);
+      console.log(`Checking transactions to: ${depositInfo.address}`);
+      console.log(`Expected from: ${senderWalletAddr}`);
+      console.log(`Transaction ID: ${transactionId}`);
+      console.log(`Expected amount: ${expectedAmount} ${curr}\n`);
+
+      // CRITICAL FIX: Check transactions to YOUR deposit address, not user's wallet
+      const transactions = await getAllTransactionsForLastHour(
+        depositInfo.address,  // Check YOUR deposit address
+        depositInfo.blockchain
       );
-      return false;
-    }
 
-    console.log(`\n=== Verifying Payment ===`);
-    console.log(`Checking transactions to: ${depositInfo.address}`);
-    console.log(`Expected from: ${senderWalletAddr}`);
-    console.log(`Transaction ID: ${transactionId}`);
-    console.log(`Expected amount: ${expectedAmount} ${curr}\n`);
+      console.log(`\nFound ${transactions.length} recent transaction(s) to deposit address\n`);
 
-    // CRITICAL FIX: Check transactions to YOUR deposit address, not user's wallet
-    const transactions = await getAllTransactionsForLastHour(
-      depositInfo.address,  // Check YOUR deposit address
-      depositInfo.blockchain
-    );
+      // Find the specific transaction by hash
+      const matchingTx = transactions.find(tx => tx.hash === transactionId);
 
-    console.log(`\nFound ${transactions.length} recent transaction(s) to deposit address\n`);
+      if (!matchingTx) {
+        setTransactionStatus('failed');
+        setValidationMessage(
+          `Transaction ${transactionId} not found in recent transactions to our deposit address.`
+        );
+        return false;
+      }
 
-    // Find the specific transaction by hash
-    const matchingTx = transactions.find(tx => tx.hash === transactionId);
+      // console.log("Matching transaction found: ", matchingTx);
 
-    if (!matchingTx) {
-      setTransactionStatus('failed');
-      setValidationMessage(
-        `Transaction ${transactionId} not found in recent transactions to our deposit address.`
+      // const results = await findIncomingTransactions({
+      //   blockchain: "bitcoin",            // or "litecoin"
+      //   depositAddress: "bc1q...youraddr",
+      //   hoursAgo: 1,
+      //   amount: 0.025,
+      //   fromAddress: "bc1q...senderaddr", // omit if you don’t need to enforce sender
+      // });
+
+      // console.log(results);
+
+
+      // Get detailed transaction info
+      const details = await getTransactionDetails(
+        userDetails.time,
+        expectedAmount,
+        [senderWalletAddr],
+        depositInfo.address,  // Check amount received at YOUR address
+        depositInfo.blockchain
       );
-      return false;
-    }
 
-    // console.log("Matching transaction found: ", matchingTx);
 
-    // Get detailed transaction info
-    const details = await getTransactionDetails(
-      matchingTx.hash, 
-      depositInfo.address,  // Check amount received at YOUR address
-      depositInfo.blockchain
-    );
 
-    if (!details) {
+      // const details = await getTransactionDetails(
+      //   matchingTx.hash, 
+      //   depositInfo.address,  // Check amount received at YOUR address
+      //   depositInfo.blockchain
+      // );
+
+      if (!details) {
+        setTransactionStatus('failed');
+        setValidationMessage('Unable to fetch transaction details.');
+        return false;
+      }
+
+      // Display transaction details
+      console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      console.log(`Transaction Hash: ${details.hash}`);
+      console.log(`Time: ${details.time}`);
+      console.log(`Confirmations: ${details.confirmations}`);
+      console.log(`Amount Received: ${details.amountReceived} ${curr}`);
+      console.log(`Sender Address(es): ${details.senderAddresses.join(', ')}`);
+
+      console.log('TX details:', details);
+
+      // Verify the sender wallet matches
+      const senderMatches = details.senderAddresses.includes(senderWalletAddr);
+      console.log(`Sender Match: ${senderMatches ? '✅ YES' : '❌ NO'}`);
+
+      // Verify the amount matches (with small tolerance for rounding)
+      const amountMatches = Math.abs(details.amountReceived - expectedAmount) < 0.01;
+      console.log(`Expected Amount: ${expectedAmount} ${curr}`);
+      console.log(`Amount Match: ${amountMatches ? '✅ YES' : '❌ NO'}`);
+
+      // Check minimum confirmations (optional - adjust as needed)
+      const hasEnoughConfirmations = details.confirmations >= 1; // At least 1 confirmation
+      console.log(`Confirmations Check: ${hasEnoughConfirmations ? '✅ YES' : '⚠️ UNCONFIRMED'}`);
+
+      console.log(`Block Explorer: https://blockchair.com/${depositInfo.blockchain}/transaction/${details.hash}`);
+      console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
+
+      // Verify all conditions
+      if (senderMatches && amountMatches && hasEnoughConfirmations) {
+        setTransactionStatus('confirmed');
+        setValidationMessage(
+          `✅ Payment verified! Received ${details.amountReceived} ${curr} with ${details.confirmations} confirmation(s).`
+        );
+        return true;
+      } else {
+        // Provide specific failure reason
+        let reason = '';
+        if (!senderMatches) reason = 'Sender address does not match.';
+        else if (!amountMatches) reason = `Amount mismatch. Received: ${details.amountReceived} ${curr}, Expected: ${expectedAmount} ${curr}`;
+        else if (!hasEnoughConfirmations) reason = 'Transaction not yet confirmed on blockchain.';
+
+        setTransactionStatus('failed');
+        setValidationMessage(`Verification failed: ${reason}`);
+        return false;
+      }
+
+    } catch (error) {
+      console.error('Transaction verification error:', error);
       setTransactionStatus('failed');
-      setValidationMessage('Unable to fetch transaction details.');
+      setValidationMessage(error.message || 'Verification error');
       return false;
     }
-
-    // Display transaction details
-    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-    console.log(`Transaction Hash: ${details.hash}`);
-    console.log(`Time: ${details.time}`);
-    console.log(`Confirmations: ${details.confirmations}`);
-    console.log(`Amount Received: ${details.amountReceived} ${curr}`);
-    console.log(`Sender Address(es): ${details.senderAddresses.join(', ')}`);
-    
-    // Verify the sender wallet matches
-    const senderMatches = details.senderAddresses.includes(senderWalletAddr);
-    console.log(`Sender Match: ${senderMatches ? '✅ YES' : '❌ NO'}`);
-
-    // Verify the amount matches (with small tolerance for rounding)
-    const amountMatches = Math.abs(details.amountReceived - expectedAmount) < 0.005;
-    console.log(`Expected Amount: ${expectedAmount} ${curr}`);
-    console.log(`Amount Match: ${amountMatches ? '✅ YES' : '❌ NO'}`);
-
-    // Check minimum confirmations (optional - adjust as needed)
-    const hasEnoughConfirmations = details.confirmations >= 1; // At least 1 confirmation
-    console.log(`Confirmations Check: ${hasEnoughConfirmations ? '✅ YES' : '⚠️ UNCONFIRMED'}`);
-
-    console.log(`Block Explorer: https://blockchair.com/${depositInfo.blockchain}/transaction/${details.hash}`);
-    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
-
-    // Verify all conditions
-    if (senderMatches && amountMatches && hasEnoughConfirmations) {
-      setTransactionStatus('confirmed');
-      setValidationMessage(
-        `✅ Payment verified! Received ${details.amountReceived} ${curr} with ${details.confirmations} confirmation(s).`
-      );
-      return true;
-    } else {
-      // Provide specific failure reason
-      let reason = '';
-      if (!senderMatches) reason = 'Sender address does not match.';
-      else if (!amountMatches) reason = `Amount mismatch. Received: ${details.amountReceived} ${curr}, Expected: ${expectedAmount} ${curr}`;
-      else if (!hasEnoughConfirmations) reason = 'Transaction not yet confirmed on blockchain.';
-
-      setTransactionStatus('failed');
-      setValidationMessage(`Verification failed: ${reason}`);
-      return false;
-    }
-
-  } catch (error) {
-    console.error('Transaction verification error:', error);
-    setTransactionStatus('failed');
-    setValidationMessage(error.message || 'Verification error');
-    return false;
   }
-}
 
   const handleValidateTransaction = async () => {
     if (!userDetails.transactionId.trim()) {
@@ -1062,7 +1298,7 @@ async function checkTransaction() {
                 </p>
               </div>
 
-              
+
               <div style={styles.formGroup}>
                 <label>Transaction Time (optional):</label>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -1095,7 +1331,7 @@ async function checkTransaction() {
                   Time when you sent the transaction (HH:MM AM/PM format)
                 </small>
               </div>
-{/* 
+              {/* 
               <div style={styles.formGroup}>
                 <label>Transaction Date (optional):</label>
                 <input

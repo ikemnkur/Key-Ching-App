@@ -48,6 +48,7 @@ export default function App() {
             )}
             <Route path="/help" element={<HelpPage />} />
             <Route path="/info" element={<Info />} />
+            <Route path="/login" element={<Auth isLogin={true} />} />
 
             {/* Seller/ Buyer Routes */}
             {(localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).accountType : null) === 'buyer' && (
