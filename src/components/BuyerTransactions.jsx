@@ -16,7 +16,6 @@ import {
   IconButton,
   InputAdornment,
   Chip,
-  Tooltip,
   CircularProgress,
   Modal,
   Divider,
@@ -24,20 +23,12 @@ import {
 import { 
   Close as CloseIcon,
   Search as SearchIcon, 
-  Download as DownloadIcon, 
   Visibility,
   Key,
   MonetizationOn,
   Report
 } from '@mui/icons-material';
-import { keyframes } from '@mui/system';
 import { useNavigate } from 'react-router-dom';
-
-// marquee for long messages
-const marqueeAnimation = keyframes`
-  0%   { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
-`;
 
 // Generate Key-Ching specific mock transaction data for buyers
 const generateBuyerMockData = () => {
@@ -48,8 +39,8 @@ const generateBuyerMockData = () => {
       amount: 250,
       credits: 250,
       transaction_type: 'Key Purchase',
-      item_title: 'Windows Pro License Key',
-      seller_username: 'TechDealer',
+      key_title: 'Windows Pro License Key',
+      sellerUsername: 'TechDealer',
       status: 'Completed',
       created_at: new Date(currentTime.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
       message: 'Purchased Windows Pro license key for personal use'
@@ -69,8 +60,8 @@ const generateBuyerMockData = () => {
       amount: 120,
       credits: 120,
       transaction_type: 'Key Purchase',
-      item_title: 'Steam Game Code',
-      seller_username: 'GameVault',
+      key_title: 'Steam Game Code',
+      sellerUsername: 'GameVault',
       status: 'Completed',
       created_at: new Date(currentTime.getTime() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
       message: 'Purchased premium indie game activation code'
@@ -90,8 +81,8 @@ const generateBuyerMockData = () => {
       amount: 75,
       credits: 75,
       transaction_type: 'Key Purchase',
-      item_title: 'Archive Password',
-      seller_username: 'DataVault',
+      key_title: 'Archive Password',
+      sellerUsername: 'DataVault',
       status: 'Completed',
       created_at: new Date(currentTime.getTime() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
       message: 'Purchased password for encrypted file archive'
@@ -101,8 +92,8 @@ const generateBuyerMockData = () => {
       amount: 0,
       credits: 0,
       transaction_type: 'Report Submitted',
-      item_title: 'Invalid Game Key',
-      seller_username: 'BadSeller',
+      key_title: 'Invalid Game Key',
+      sellerUsername: 'BadSeller',
       status: 'Under Review',
       created_at: new Date(currentTime.getTime() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
       message: 'Reported non-working game activation key'
@@ -183,10 +174,10 @@ const DetailsModal = ({ transaction, open, handleClose }) => {
             <Typography sx={{ color: '#e0e0e0', fontFamily: 'monospace' }}>#{transaction.id}</Typography>
           </Box>
 
-          {transaction.item_title && (
+          {transaction.key_title && (
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography sx={{ color: '#b0b0b0' }}>Item:</Typography>
-              <Typography sx={{ color: '#ffd700', fontWeight: 600 }}>{transaction.item_title}</Typography>
+              <Typography sx={{ color: '#ffd700', fontWeight: 600 }}>{transaction.key_title}</Typography>
             </Box>
           )}
 
@@ -215,13 +206,13 @@ const DetailsModal = ({ transaction, open, handleClose }) => {
             />
           </Box>
 
-          {transaction.seller_username && (
+          {transaction.sellerUsername && (
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography sx={{ color: '#b0b0b0' }}>Seller:</Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography sx={{ color: '#e0e0e0' }}>{transaction.seller_username}</Typography>
+                <Typography sx={{ color: '#e0e0e0' }}>{transaction.sellerUsername}</Typography>
                 <Button
-                  onClick={() => goToSeller(transaction.seller_username)}
+                  onClick={() => goToSeller(transaction.sellerUsername)}
                   variant="outlined"
                   size="small"
                   startIcon={<Visibility />}
@@ -401,8 +392,8 @@ const BuyerTransactions = () => {
     const term = searchTerm.toLowerCase();
     const safe = (v) => (v ? String(v).toLowerCase() : '');
     const filtered = transactions.filter((t) =>
-      safe(t.seller_username).includes(term) ||
-      safe(t.item_title).includes(term) ||
+      safe(t.sellerUsername).includes(term) ||
+      safe(t.key_title).includes(term) ||
       safe(t.message).includes(term) ||
       safe(t.transaction_type).includes(term) ||
       safe(t.amount).includes(term) ||
@@ -434,8 +425,8 @@ const BuyerTransactions = () => {
           bValue = parseFloat(b.amount || 0);
           break;
         case 'seller':
-          aValue = String(a.seller_username || '').toLowerCase();
-          bValue = String(b.seller_username || '').toLowerCase();
+          aValue = String(a.sellerUsername || '').toLowerCase();
+          bValue = String(b.sellerUsername || '').toLowerCase();
           break;
         case 'status':
           aValue = String(a.status || '').toLowerCase();
@@ -458,13 +449,19 @@ const BuyerTransactions = () => {
 
   const transactionsToDisplay = sortTransactions(filteredTransactions);
 
+  // Remove the problematic setTimeout - this was causing issues
+  // setTimeout(() => {
+  //   // transactionsToDisplay = sortTransactions(filteredTransactions);
+  //   console.log('Updated transactions to display after timeout:', transactionsToDisplay);
+  // }, 1000);
+
   const exportToCSV = () => {
     const headers = ['Date', 'Type', 'Item/Method', 'Seller', 'Credits', 'Status', 'Message'];
     const rows = transactionsToDisplay.map((t) => [
       new Date(t.created_at).toLocaleDateString(),
       t.transaction_type,
-      t.item_title || t.payment_method || 'N/A',
-      t.seller_username || 'System',
+      t.key_title || t.payment_method || 'N/A',
+      t.sellerUsername || 'System',
       t.credits || 0,
       t.status,
       t.message || ''
@@ -653,130 +650,136 @@ const BuyerTransactions = () => {
         </Box>
 
         {/* Table */}
-        <TableContainer
-          component={Paper}
-          sx={{
-            maxHeight: { xs: 400, md: 500 },
-            overflowY: 'auto',
-            overflowX: 'auto',
-            borderRadius: 1,
-            backgroundColor: '#2a2a2a'
-          }}
-        >
-          <Table
+          <TableContainer
+            component={Paper}
             sx={{
-              minWidth: { xs: 320, sm: 500 },
-              '& .MuiTableCell-root': {
-                px: { xs: 0.5, sm: 2 },
-                py: { xs: 1, sm: 1.5 },
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                borderBottom: '1px solid #444',
-              },
-              '& .MuiTableHead-root .MuiTableCell-root': {
-                fontWeight: 600,
-                fontSize: { xs: '0.7rem', sm: '0.875rem' },
-                px: { xs: 0.5, sm: 2 },
-                backgroundColor: '#1a1a1a',
-                color: '#ffd700',
-                borderBottom: '2px solid #ffd700'
-              }
+              maxHeight: { xs: 400, md: 500 },
+              overflowY: 'auto',
+              overflowX: 'auto',
+              borderRadius: 1,
+              backgroundColor: '#2a2a2a'
             }}
-            aria-label="buyer transaction history table"
           >
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ width: { xs: '20%', sm: 'auto' }, color: '#ffd700' }}>
-                  Credits
-                </TableCell>
-                <TableCell sx={{ width: { xs: '35%', sm: 'auto' }, color: '#ffd700' }}>
-                  <Box sx={{ display: { xs: 'none', sm: 'block' } }}>Item/Seller</Box>
-                  <Box sx={{ display: { xs: 'block', sm: 'none' } }}>Details</Box>
-                </TableCell>
-                <TableCell sx={{ width: { xs: '20%', sm: 'auto' }, color: '#ffd700' }}>
-                  Type
-                </TableCell>
-                <TableCell sx={{ width: { xs: '15%', sm: 'auto' }, color: '#ffd700' }}>
-                  Date
-                </TableCell>
-                <TableCell sx={{ width: { xs: '10%', sm: 'auto' }, color: '#ffd700' }}>
-                  Status
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading && (
+            <Table
+              sx={{
+                minWidth: { xs: 320, sm: 500 },
+                '& .MuiTableCell-root': {
+            px: { xs: 0.5, sm: 2 },
+            py: { xs: 1, sm: 1.5 },
+            fontSize: { xs: '0.75rem', sm: '0.875rem' },
+            borderBottom: '1px solid #444',
+                },
+                '& .MuiTableHead-root .MuiTableCell-root': {
+            fontWeight: 600,
+            fontSize: { xs: '0.7rem', sm: '0.875rem' },
+            px: { xs: 0.5, sm: 2 },
+            backgroundColor: '#1a1a1a',
+            color: '#ffd700',
+            borderBottom: '2px solid #ffd700'
+                }
+              }}
+              aria-label="buyer transaction history table"
+            >
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ color: '#e0e0e0', py: 4 }}>
-                    <CircularProgress sx={{ color: '#ffd700' }} />
-                  </TableCell>
+            <TableCell sx={{ width: { xs: '20%', sm: 'auto' }, color: '#ffd700' }}>
+              Credits
+            </TableCell>
+            <TableCell sx={{ width: { xs: '35%', sm: 'auto' }, color: '#ffd700' }}>
+              <Box sx={{ display: { xs: 'none', sm: 'block' } }}>Item/Seller</Box>
+              <Box sx={{ display: { xs: 'block', sm: 'none' } }}>Details</Box>
+            </TableCell>
+            <TableCell sx={{ width: { xs: '20%', sm: 'auto' }, color: '#ffd700' }}>
+              Type
+            </TableCell>
+            <TableCell sx={{ width: { xs: '15%', sm: 'auto' }, color: '#ffd700' }}>
+              Date
+            </TableCell>
+            <TableCell sx={{ width: { xs: '10%', sm: 'auto' }, color: '#ffd700' }}>
+              Status
+            </TableCell>
                 </TableRow>
-              )}
-              {error && (
-                <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ color: '#f44336', py: 4 }}>
-                    {error}
-                  </TableCell>
-                </TableRow>
-              )}
-              {!loading && transactionsToDisplay.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ 
-                    color: '#b0b0b0', 
-                    py: 4,
-                    fontStyle: 'italic'
-                  }}>
-                    No transactions found. Your purchases will appear here.
-                  </TableCell>
-                </TableRow>
-              )}
-              {transactionsToDisplay.map((t) => (
-                <TableRow
-                  key={t.id}
-                  hover
-                  onClick={() => handleRowClick(t)}
+              </TableHead>
+              <TableBody>
+                {loading && (
+            <TableRow>
+              <TableCell colSpan={5} align="center" sx={{ color: '#e0e0e0', py: 4 }}>
+                <CircularProgress sx={{ color: '#ffd700' }} />
+              </TableCell>
+            </TableRow>
+                )}
+                {error && (
+            <TableRow>
+              <TableCell colSpan={5} align="center" sx={{ color: '#f44336', py: 4 }}>
+                {error}
+              </TableCell>
+            </TableRow>
+                )}
+                {!loading && transactionsToDisplay.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={5} align="center" sx={{ 
+                color: '#b0b0b0', 
+                py: 4,
+                fontStyle: 'italic'
+              }}>
+                No transactions found. Your purchases will appear here.
+              </TableCell>
+            </TableRow>
+                )}
+                {transactionsToDisplay.map((t) => {
+            // normalize common fields coming from different APIs / transformations
+            const title = t.keyTitle || t.key_title || t.key || t.item || t.name || null;
+            const seller = t.sellerUsername || t.seller_username || t.buyer_username || t.username || null;
+            const paymentMethod = t.payment_method || t.payout_method || t.currency || null;
+
+            return (
+              <TableRow
+                key={t.id}
+                hover
+                onClick={() => handleRowClick(t)}
+                sx={{
+                  cursor: 'pointer',
+                  '&:last-child td, &:last-child th': { border: 0 },
+                  '&:hover': {
+              backgroundColor: '#333',
+                  },
+                  backgroundColor: '#2a2a2a'
+                }}
+              >
+                <TableCell
+                  component="th"
+                  scope="row"
                   sx={{
-                    cursor: 'pointer',
-                    '&:last-child td, &:last-child th': { border: 0 },
-                    '&:hover': {
-                      backgroundColor: '#333',
-                    },
-                    backgroundColor: '#2a2a2a'
+              fontWeight: 600,
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              color: '#2e7d32'
                   }}
                 >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    sx={{
-                      fontWeight: 600,
-                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                      color: '#2e7d32'
-                    }}
-                  >
-                    {t.credits || 0} ₡
-                  </TableCell>
-                  
-                  <TableCell sx={{ color: '#e0e0e0' }}>
-                    <Box>
-                      {/* Desktop view - show item and seller */}
-                      <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-                        {t.item_title && (
-                          <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: '#ffd700' }}>
-                            {t.item_title}
-                          </Typography>
-                        )}
-                        {t.seller_username && (
-                          <Typography variant="body2" sx={{ fontSize: '0.75rem', color: '#b0b0b0' }}>
-                            by {t.seller_username}
-                          </Typography>
-                        )}
-                        {t.payment_method && (
-                          <Typography variant="body2" sx={{ fontSize: '0.75rem', color: '#b0b0b0' }}>
-                            via {t.payment_method}
-                          </Typography>
-                        )}
-                      </Box>
+                  {t.credits || 0} ₡
+                </TableCell>
+                
+                <TableCell sx={{ color: '#e0e0e0' }}>
+                  <Box>
+              {/* Desktop view - show item and seller */}
+              <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                {title && (
+                  <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: '#ffd700' }}>
+                    {title}
+                  </Typography>
+                )}
+                {seller && (
+                  <Typography variant="body2" sx={{ fontSize: '0.75rem', color: '#b0b0b0' }}>
+                    by {seller}
+                  </Typography>
+                )}
+                {paymentMethod && (
+                  <Typography variant="body2" sx={{ fontSize: '0.75rem', color: '#b0b0b0' }}>
+                    via {paymentMethod}
+                  </Typography>
+                )}
+              </Box>
 
-                      {/* Mobile view - compact format */}
+              {/* Mobile view - compact format */}
                       <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
                         <Typography
                           variant="body2"
@@ -790,11 +793,11 @@ const BuyerTransactions = () => {
                             color: '#ffd700'
                           }}
                         >
-                          {t.item_title || t.payment_method || 'Transaction'}
+                          {t.key_title || t.payment_method || 'Transaction'}
                         </Typography>
-                        {t.seller_username && (
+                        {t.sellerUsername && (
                           <Typography variant="caption" sx={{ color: '#b0b0b0' }}>
-                            {t.seller_username}
+                            {t.sellerUsername}
                           </Typography>
                         )}
                       </Box>
@@ -864,7 +867,8 @@ const BuyerTransactions = () => {
                     />
                   </TableCell>
                 </TableRow>
-              ))}
+              );
+            })}
             </TableBody>
           </Table>
         </TableContainer>

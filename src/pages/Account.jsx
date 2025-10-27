@@ -280,37 +280,42 @@ const AccountPage = () => {
             >
               Profile Information
             </Typography>
-            
-            <Avatar
-              src={userData.profilePicture || '/default-avatar.png'}
-              sx={{ 
-                width: 100, 
-                height: 100, 
-                mx: 'auto', 
-                mb: 3,
-                border: '3px solid #ffd700'
-              }}
-            />
-            <Box sx={{ textAlign: 'center', mb: 3 }}> 
-              <Button
-                variant="contained"
-                component="label"
-                sx={{ backgroundColor: '#444', '&:hover': { backgroundColor: '#555' } }}
-                disabled={uploading}
-              >
-                {uploading ? (
-                  <CircularProgress size={24} sx={{ color: '#ffd700' }} />
-                ) : (
-                  'Change Profile Picture'
-                )}
-                <input
-                  type="file"
-                  hidden
-                  accept="image/*"
-                  onChange={handleProfilePicChange}
+
+{/* only show avatar for sellers */}
+            {JSON.parse(localStorage.getItem('userdata') || '{}').accountType === "seller" && (
+              <>
+                <Avatar
+                  src={userData.profilePicture || '/default-avatar.png'}
+                  sx={{ 
+                    width: 100, 
+                    height: 100, 
+                    mx: 'auto', 
+                    mb: 3,
+                    border: '3px solid #ffd700'
+                  }}
                 />
-              </Button>
-            </Box>
+                <Box sx={{ textAlign: 'center', mb: 3 }}> 
+                  <Button
+                    variant="contained"
+                    component="label"
+                    sx={{ backgroundColor: '#444', '&:hover': { backgroundColor: '#555' } }}
+                    disabled={uploading}
+                  >
+                    {uploading ? (
+                      <CircularProgress size={24} sx={{ color: '#ffd700' }} />
+                    ) : (
+                      'Change Profile Picture'
+                    )}
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleProfilePicChange}
+                    />
+                  </Button>
+                </Box>
+              </>
+            )}
 
             <TextField
               fullWidth
