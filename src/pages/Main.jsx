@@ -52,6 +52,10 @@ export default function Wallet() {
         } catch (e) {
             console.error('Error loading wallet balance:', e);
             setBalance(750); // demo fallback with realistic amount
+            // clear local storage
+            localStorage.clear();
+            navigate('/info');
+            setTimeout(() => { navigate('/login'); }, 15000); // Redirect to login after 15 seconds
         }
 
     };
