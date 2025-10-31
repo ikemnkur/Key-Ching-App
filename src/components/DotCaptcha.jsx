@@ -10,6 +10,7 @@ const DotCaptcha = ({ onSuccess, onFailure }) => {
   const [targetCount, setTargetCount] = useState(0);
   const [userInput, setUserInput] = useState('');
   const [timeLeft, setTimeLeft] = useState(15);
+
   const [attempts, setAttempts] = useState(0);
   const [blocked, setBlocked] = useState(false);
 
