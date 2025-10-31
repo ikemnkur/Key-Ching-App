@@ -38,7 +38,7 @@ export default function Listing() {
     keyTitle: '',
     description: '',
     price: '',
-    tags: '',
+    // tags: '',
     isActive: true
   });
   const { error, info, success } = useToast();
@@ -86,8 +86,8 @@ export default function Listing() {
       keyTitle: item.keyTitle || item.title || '',
       description: item.description || '',
       price: item.price || item.price_credits || '',
-      tags: Array.isArray(item.tags) ? item.tags.join(', ') :
-        (typeof item.tags === 'string' ? item.tags : ''),
+      // tags: Array.isArray(item.tags) ? item.tags.join(', ') :
+      //   (typeof item.tags === 'string' ? item.tags : ''),
       isActive: item.isActive !== undefined ? item.isActive : true
     });
     setEditDialogOpen(true);
@@ -129,7 +129,7 @@ export default function Listing() {
         keyTitle: editFormData.keyTitle,
         description: editFormData.description,
         price: parseInt(editFormData.price),
-        tags: editFormData.tags,
+        // tags: editFormData.tags,
         isActive: editFormData.isActive
       };
 
@@ -317,7 +317,7 @@ export default function Listing() {
               InputProps={{ sx: { color: 'text.primary' } }}
               InputLabelProps={{ sx: { color: 'text.secondary' } }}
             />
-            <TextField
+            {/* <TextField
               label="Tags (comma separated)"
               fullWidth
               value={editFormData.tags}
@@ -325,7 +325,7 @@ export default function Listing() {
               helperText="e.g., gaming, software, premium"
               InputProps={{ sx: { color: 'text.primary' } }}
               InputLabelProps={{ sx: { color: 'text.secondary' } }}
-            />
+            /> */}
             <FormControlLabel
               control={
                 <Switch

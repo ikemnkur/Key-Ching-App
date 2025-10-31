@@ -192,6 +192,8 @@ const Notifications = () => {
 
   // Handle dismiss notification
   const handleDismiss = (id) => {
+    // todo: 
+    deleteNotifcation()
     setNotifications((prev) => prev.filter((notif) => notif.id !== id));
   };
 

@@ -22,6 +22,7 @@ import Listings from './pages/Listing';
 import Purchase from './pages/Purchase';
 import Info from './pages/Info';
 import SignUp2Unlock from './pages/SignUp2Unlock';
+import UnlockPreview from './pages/UnlockPreivew';
 import LoadingPage from './pages/Loading';
 import './styles.css';
 import { ToastProvider } from './contexts/ToastContext';
@@ -43,6 +44,7 @@ export default function App() {
                 <Route path="/register" element={<Auth isLogin={false} />} />
               </>
             )}
+
             {!(localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).loginStatus : false) && (
               <Route path="/unlock/:id" element={<SignUp2Unlock />} />
             )}
@@ -63,6 +65,7 @@ export default function App() {
             )}
             {(localStorage.getItem('userdata') ? JSON.parse(localStorage.getItem('userdata')).accountType : null) === 'seller' && (
               <>
+                 <Route path="/unlock-preview/:id" element={<UnlockPreview />} />
                 <Route path="/earnings" element={<Earnings />} />
                 <Route path="/create-key" element={<CreateKey />} />
                 <Route path="/redeem" element={<Redeem />} />
