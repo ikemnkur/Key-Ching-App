@@ -22,7 +22,7 @@ import Listings from './pages/Listing';
 import Purchase from './pages/Purchase';
 import Info from './pages/Info';
 import SignUp2Unlock from './pages/SignUp2Unlock';
-import UnlockPreview from './pages/UnlockPreivew';
+import UnlockPreview from './pages/UnlockPreview';
 import LoadingPage from './pages/Loading';
 import './styles.css';
 import { ToastProvider } from './contexts/ToastContext';

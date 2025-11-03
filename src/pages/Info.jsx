@@ -204,7 +204,7 @@ const Info = () => {
                     mb: 4
                 }}
             >
-                Welcome to $$$Key-Ching$$$
+                Welcome to Key-Ching!
             </Typography>
 
             {/* Main Sections */}
