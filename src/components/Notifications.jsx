@@ -154,15 +154,20 @@ const Notifications = () => {
       const username = userData.username || 'user_123';
       
       // Fetch all notifications and filter by username
-      const response = await fetch(`${API_URL}/api/notifications`);
+      // const response = await fetch(`${API_URL}/api/notifications/${username}`);
+
+      const response = await api.get(`${API_URL}/api/notifications/${username}`);
+
 
       
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      // if (!response.ok) {
+      //   throw new Error(`HTTP error! status: ${response.status}`);
+      // }
       
-      const allNotifications = await response.json();
+      const allNotifications = await response.data;
+
+      console.log("Fetched notifications:", allNotifications);  
       
       // Filter notifications for current user
       const userNotifications = allNotifications.filter(
@@ -336,7 +341,7 @@ const Notifications = () => {
                   
                   <ListItemText
                     primary={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                      <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                         <Typography
                           variant="subtitle2"
                           sx={{ color: '#ffd700', fontWeight: 600 }}
@@ -356,16 +361,18 @@ const Notifications = () => {
                       </Box>
                     }
                     secondary={
-                      <Box>
+                      <Box component="span" sx={{ display: 'block' }}>
                         <Typography
+                          component="span"
                           variant="body2"
-                          sx={{ color: '#e0e0e0', mb: 0.5 }}
+                          sx={{ color: '#e0e0e0', mb: 0.5, display: 'block' }}
                         >
                           {notif.message}
                         </Typography>
                         <Typography
+                          component="span"
                           variant="caption"
-                          sx={{ color: '#b0b0b0' }}
+                          sx={{ color: '#b0b0b0', display: 'block' }}
                         >
                           {getRelativeTime(notif.createdAt)}
                         </Typography>

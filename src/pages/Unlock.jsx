@@ -205,22 +205,22 @@ export default function Unlock() {
                   {item.description}
                 </Typography>
               </Grid>
-              <Grid xs={12} sm={4}>
+              {/* <Grid xs={12} sm={4}>
                 <Typography variant="subtitle2" color="text.secondary">
                   Quantity
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 600 }}>
                   {item.quantity}
                 </Typography>
-              </Grid>
-              <Grid xs={12} sm={4}>
+              </Grid> */}
+              {/* <Grid xs={12} sm={4}>
                 <Typography variant="subtitle2" color="text.secondary">
                   Sold
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 600 }}>
                   {item.sold}
                 </Typography>
-              </Grid>
+              </Grid> */}
               <Grid xs={12} sm={4}>
                 <Typography variant="subtitle2" color="text.secondary">
                   Available

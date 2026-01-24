@@ -29,6 +29,7 @@ import {
   Report
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import api from '../api/client';
 
 // Generate Key-Ching specific mock transaction data for buyers
 const generateBuyerMockData = () => {
@@ -314,20 +315,22 @@ const BuyerTransactions = () => {
         
         // Fetch data from JSON server
         // Get unlocks and credit purchases for the buyer
-        const unlocksResponse = await fetch(`${API_URL}/api/unlocks`);
-        const creditsResponse = await fetch(`${API_URL}/api/buyCredits`);
+        const unlocksResponse = await api.get(`/api/unlocks/${username}`);
+        const creditsResponse = await api.get(`/api/purchases/${username}`);
 
-        if (!unlocksResponse.ok) {
-          throw new Error(`HTTP error! status: ${unlocksResponse.status}`);
-        }
-        if (!creditsResponse.ok) {
-          throw new Error(`HTTP error! status: ${creditsResponse.status}`);
-        }
+        // if (!unlocksResponse.ok) {
+        //   throw new Error(`HTTP error! status: ${unlocksResponse.status}`);
+        // }
+        // if (!creditsResponse.ok) {
+        //   throw new Error(`HTTP error! status: ${creditsResponse.status}`);
+        // }
+
+        console.log('Fetched unlocks data:', unlocksResponse.data.unlocks);
+        console.log('Fetched credit purchases data:', creditsResponse.data.purchases);
 
         // Get all data and filter for current user
-        const allUnlocks = await unlocksResponse.json();
-        const allCreditPurchases = await creditsResponse.json();
-
+        const allUnlocks = await unlocksResponse.data.unlocks;
+        const allCreditPurchases = await creditsResponse.data.purchases;
         // Filter for current user's transactions
         const userUnlocks = allUnlocks.filter(unlock => unlock.username === username);
         const userCredits = allCreditPurchases.filter(credit => credit.username === username);

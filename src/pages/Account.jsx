@@ -44,26 +44,25 @@ const AccountPage = () => {
         const storedUserData = JSON.parse(localStorage.getItem("userdata") || '{}');
         const username = storedUserData.username || 'user_123';
 
-        const response = await fetch(`${API_URL}/api/userData`);
-        if (!response.ok) throw new Error('Failed to fetch');
+        const response = await api.get(`${API_URL}/api/userData/${username}`);
         
-        const allUsers = await response.json();
-        const currentUser = allUsers.find(user => user.username === username);
+        const data = await response.data;
+        // const currentUser = allUsers.find(user => user.username === username);
         
-        if (currentUser) {
+        // if (currentUser) {
           setUserData({
-            id: currentUser.id,
-            username: currentUser.username,
-            email: currentUser.email,
-            firstName: currentUser.firstName,
-            lastName: currentUser.lastName,
-            phoneNumber: currentUser.phoneNumber,
-            bio: currentUser.bio || '',
-            credits: currentUser.credits || 0,
-            accountType: currentUser.accountType || 'buyer',
-            profilePicture: currentUser.profilePicture || '',
+            id: data.id,
+            username: data.username,
+            email: data.email,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            phoneNumber: data.phoneNumber,
+            bio: data.bio || '',
+            credits: data.credits || 0,
+            accountType: data.accountType || 'buyer',
+            profilePicture: data.profilePicture || '',
           });
-        }
+        // }
       } catch (error) {
         console.error('Error:', error);
       } finally {
@@ -208,8 +207,7 @@ const AccountPage = () => {
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
-      const response = await fetch(`${API_URL}/api/userData/${userData.id}`, {
-        method: 'PATCH',
+      const response = await api.patch(`${API_URL}/api/userData/${userData.username}`, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -238,6 +236,8 @@ const AccountPage = () => {
       setOpenSnackbar(true);
     }
   };
+
+
 
   return (
     <Box sx={{ 

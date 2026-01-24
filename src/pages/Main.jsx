@@ -12,8 +12,11 @@ const API_URL = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:3001';
 export default function Wallet() {
     const [balance, setBalance] = useState(null);
     const { success, error } = useToast();
-    const accountType = localStorage.getItem('accountType'); // 'buyer', 'seller', or null
+    // const accountType = localStorage.getItem('accountType'); // 'buyer', 'seller', or null
     const userData = JSON.parse(localStorage.getItem("userdata") || '{"username":"user_123"}');
+    const accountType = userData.accountType || null;
+
+    console.log("Wallet account type:", accountType);
 
     const navigate = useNavigate();
 
@@ -28,11 +31,13 @@ export default function Wallet() {
                 (Date.now() - parseInt(localStorage.getItem('lastDataFetch') || "0", 10) > 1.5 * 60 * 1000);
 
             if (lastDataFetchTooOld) {
-                response = await api.post(`${API_URL}/api/user`, {
+                let response = await api.post(`${API_URL}/api/user`, {
                     username: userData.username,
                     email: userData.email,
                     password: localStorage.getItem('passwordtxt')
                 });
+
+                console.log("Wallet user profile response:", response);
 
                 if (response.status === 200 && response.data) {
                     console.log("User profile response data:", response.data);

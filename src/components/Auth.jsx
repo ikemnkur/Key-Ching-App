@@ -21,6 +21,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { Link as RouterLink } from 'react-router-dom';
 import SimpleDotCaptcha from './SimpleDotCaptcha';
 import CoinAnimationCanvas from '../components/CoinAnimationCanvas';
+import api from '../api/client';
 
 const Auth = ({ isLogin, onLoginSuccess }) => {
   // State variables
@@ -88,7 +89,7 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
       const userData = JSON.parse(userdata);
 
       // Fetch latest user data from JSON server
-      const response = await api.get(`/api/userData/${userData.id}`);
+      const response = await api.get(`/api/userData/${userData.username}`);
 
       if (response.status !== 200) {
         throw new Error('Failed to fetch user profile');
@@ -214,17 +215,17 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
 
         localStorage.setItem('passwordtxt', password); // Mark CAPTCHA as passed for this session
 
-        if (!loginResponse.ok) {
-          const errorData = await loginResponse.json();
-          throw new Error(errorData.message || 'Login failed');
-        }
+        // if (!loginResponse.ok) {
+        //   const errorData = await loginResponse.json();
+        //   throw new Error(errorData.message || 'Login failed');
+        // }
 
         const loginData = await loginResponse.json();
         console.log('✅ Login response from server:', loginData);
 
-        if (!loginData.success) {
-          throw new Error(loginData.message || 'Login failed');
-        }
+        // if (!loginData.success) {
+        //   throw new Error(loginData.message || 'Login failed');
+        // }
 
         // Store user data and token from server response
         const { user, token } = loginData;
