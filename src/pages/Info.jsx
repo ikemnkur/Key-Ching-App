@@ -260,6 +260,7 @@ const Info = () => {
                         {/* <Button variant="outlined" onClick={() => navigate('/register')}>
               Try Clout Coin
             </Button> */}
+                    {localStorage.getItem("userdata") &&
                         <Button
                             variant="outlined"
                             onClick={() => navigate('/login')}
@@ -275,6 +276,9 @@ const Info = () => {
                         >
                             Log In to Key Ching
                         </Button>
+                    }
+                    
+                    {localStorage.getItem("userdata") &&
                         <Button
                             variant="outlined"
                             onClick={() => navigate('/')}
@@ -290,6 +294,7 @@ const Info = () => {
                         >
                             Go to Dashboard
                         </Button>
+                    }
                     </Box>
                 </Paper>
 

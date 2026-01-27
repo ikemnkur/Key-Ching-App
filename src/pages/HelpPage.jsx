@@ -152,21 +152,21 @@ const HelpPage = () => {
         </Table>
       )
     },
-    {
-      category: 'account',
-      question: 'Can I change my account tier?',
-      answer: 'Yes, you can upgrade or downgrade to a different tier. Daily fees apply based on your selected tier level.'
-    },
+    // {
+    //   category: 'account',
+    //   question: 'Can I change my account tier?',
+    //   answer: 'Yes, you can upgrade or downgrade to a different tier. Daily fees apply based on your selected tier level.'
+    // },
     {
       category: 'payment',
       question: 'How do I buy more coins?',
-      answer: 'You can purchase coins through the dashboard using various payment methods including credit cards and digital wallets.'
+      answer: 'You can purchase coins through the dashboard using various cryto payment methods including BTC, LTC, ETH, and SOL.'
     },
-    {
-      category: 'payment',
-      question: 'How do I send coins to other users?',
-      answer: 'Use the Send Money feature in your dashboard. Enter the recipient\'s username, amount, and a message to complete the transfer.'
-    },
+    // {
+    //   category: 'payment',
+    //   question: 'How do I send coins to other users?',
+    //   answer: 'Use the Send Money feature in your dashboard. Enter the recipient\'s username, amount, and a message to complete the transfer.'
+    // },
     {
       category: 'security',
       question: 'Should I trust other users on the site?',
@@ -174,18 +174,18 @@ const HelpPage = () => {
     },
     {
       category: 'security',
-      question: 'How can I avoid being scammed?',
-      answer: 'Always verify users outside the app, start with small transactions, and report suspicious behavior immediately.'
+      question: 'How can I avoid being scammed with fake keys?',
+      answer: 'Always verify users outside the app, start with small transactions, and report suspicious/false keys immediately.'
     },
     {
       category: 'security',
       question: 'What should I do if I\'ve been scammed?',
-      answer: 'Create a support ticket immediately and include evidence of the scam so we can investigate. For large transactions, refunds may be possible with a penalty for conflict resolution.'
+      answer: 'Create a support ticket immediately and include evidence of the scam so we can investigate. Note frequent use transaction investigations may come with a penalty for conflict resolution.'
     },
     {
       category: 'content',
-      question: 'What type of content can I create?',
-      answer: 'You can create any digital content, but avoid anything illegal, child content, extreme gore, or content that violates site policy.'
+      question: 'For what type of content can I create keys for?',
+      answer: 'You can create any keys for any digital content that requires a password/code to access, but please avoid anything illegal or extreme in nature.'
     },
     {
       category: 'content',
@@ -195,12 +195,12 @@ const HelpPage = () => {
     {
       category: 'support',
       question: 'How can my account be banned or restricted?',
-      answer: 'Accounts can be banned for hacking, scamming, spamming, and glitching. Restrictions occur from accumulation of bad reviews or frequent reports.'
+      answer: 'Accounts can be banned for hacking, scamming, spamming, and sabatouring. Restrictions occur from accumulation of bad reviews or frequent reports.'
     },
     {
       category: 'support',
       question: 'When are accounts deleted?',
-      answer: 'Accounts are deleted after 90 days of inactivity, failing captchas repeatedly, or causing glitching events.'
+      answer: 'Accounts are deleted after 90 days of inactivity, failing captchas repeatedly, or causing site damaging/glitching events.'
     }
   ];
 
@@ -427,16 +427,16 @@ const HelpPage = () => {
               backgroundColor: '#2a2a2a',
               color: '#ffffff',
               '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#ffd700',
+                borderColor: '#0f0700',
               },
               '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#ffed4e',
+                borderColor: '#0f0d0e',
               },
               '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#ffd700',
+                borderColor: '#0f0700',
               },
               '& .MuiSvgIcon-root': {
-                color: '#ffd700',
+                color: '#0f0700',
               }
             }}
           >
