@@ -200,16 +200,16 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
       console.log('🚀 Starting authentication process...');
       if (isLogin) {
         console.log('📝 Processing login for email:', email);
-        
+
         // Use the authentication endpoint we set up in the server
         const loginResponse = await fetch(`${API_URL}/api/auth/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             email: email, // Using email as username for login
-            password: password 
+            password: password
           })
         });
 
@@ -239,16 +239,31 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
         // Clear failed CAPTCHA attempts on success
         localStorage.removeItem('failedCaptcha');
 
+
+        // Clear failed CAPTCHA attempts on success
+        localStorage.removeItem('failedCaptcha');
+
+        console.log('🎯 Calling onLoginSuccess callback...');
+        if (onLoginSuccess) {
+          onLoginSuccess();
+        }
+
+        // Always navigate to main page after successful auth
+        console.log('');
+        setTimeout(() => {
+          navigate('/');
+        }, 500);
+
       } else {
         console.log('📝 Processing registration for username:', username);
-        
+
         // Use the registration endpoint we set up in the server
         const registerResponse = await fetch(`${API_URL}/api/auth/register`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             username: username,
             email: email,
             password: password,
@@ -272,28 +287,31 @@ const Auth = ({ isLogin, onLoginSuccess }) => {
         }
 
         // Store user data and token from server response
-        const { user, token } = registerData;
+        const { user, token, verification } = registerData;
+        localStorage.setItem('verification', JSON.stringify(verification));
         localStorage.setItem('token', token);
         localStorage.setItem('userdata', JSON.stringify(user));
         localStorage.setItem('accountType', user.accountType);
         localStorage.setItem('unlockedKeys', JSON.stringify([])); // Initialize unlocked keys storage
 
         console.log('✅ Registration successful for:', user.username);
+
+
+        // Clear failed CAPTCHA attempts on success
+        localStorage.removeItem('failedCaptcha');
+
+        console.log('🎯 Calling onLoginSuccess callback...');
+        if (onLoginSuccess) {
+          onLoginSuccess();
+        }
+
+        // Always navigate to main page after successful auth
+        console.log('');
+        setTimeout(() => {
+          navigate(`/verify-account?email=${email}&username=${username}&amount1=${verification.amount1}&amount2=${verification.amount2}&timeLeft=${verification.timeLeft}`);
+        }, 500);
       }
 
-      // Clear failed CAPTCHA attempts on success
-      localStorage.removeItem('failedCaptcha');
-
-      console.log('🎯 Calling onLoginSuccess callback...');
-      if (onLoginSuccess) {
-        onLoginSuccess();
-      }
-
-      // Always navigate to main page after successful auth
-      console.log('🧭 Navigating to /dashboard page...');
-      setTimeout(() => {
-        navigate('/');
-      }, 500);
 
     } catch (error) {
       console.error('Auth error:', error.message || 'An error occurred');

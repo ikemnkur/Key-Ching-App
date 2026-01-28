@@ -634,6 +634,16 @@ export const checkApiHealth = async () => {
   }
 };
 
+// Verify Account
+export const verifyAccount = async (payload) => {
+  try {
+    const response = await api.post('/auth/verify-account', payload);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 
 export default api;
 

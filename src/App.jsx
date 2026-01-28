@@ -24,6 +24,7 @@ import Info from './pages/Info';
 import SignUp2Unlock from './pages/SignUp2Unlock';
 import UnlockPreview from './pages/UnlockPreview';
 import LoadingPage from './pages/Loading';
+import VerifyAccount from './pages/VerifyAccount';
 import './styles.css';
 import { ToastProvider } from './contexts/ToastContext';
 
@@ -50,6 +51,8 @@ export default function App() {
             )}
             <Route path="/help" element={<HelpPage />} />
             <Route path="/info" element={<Info />} />
+            <Route path="/register" element={<Auth isLogin={false} />} />  
+            <Route path="/verify-account" element={<VerifyAccount />} />
             <Route path="/login" element={<Auth isLogin={true} />} />
 
             {/* Seller/ Buyer Routes */}
