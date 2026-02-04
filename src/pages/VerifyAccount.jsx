@@ -20,35 +20,60 @@ export default function VerifyAccount() {
 
     const [currency, setCurrency] = useState('LTC');
     const [userWalletAddress, setUserWalletAddress] = useState('');
+    const [transactionId, setTransactionId] = useState('');
     const [statusMsg, setStatusMsg] = useState('');
     const [timeLeft, setTimeLeft] = useState(10 * 60);
     const [infoOpen, setInfoOpen] = useState(false);
+    const [time, setTime] = useState(new Date().getTime());
 
     const timerCanvasRef = useRef(null);
     const qrCanvasRef = useRef(null);
 
-    const [amounts] = useState(() => {
+    const verification = useMemo(() => {
+        // this is where we get the verification amounts from local storage that were set during registration
         const verification = localStorage.getItem('verification') ? JSON.parse(localStorage.getItem('verification')) : null;
-        const a1 = verification.amount1;
-        const a2 = verification.amount2;
+        return verification;
+    }, []);
+
+    const [amounts] = useState(() => {
+        // this is where we get the verification amounts from local storage that were set during registration
+        // const verification = localStorage.getItem('verification') ? JSON.parse(localStorage.getItem('verification')) : null;
+        // const a1 = verification.amount1;
+        // const a2 = verification.amount2;
+        if (time < verification.time) {
+            
+            setTime(verification.time)
+        }
+
+        // from backend we get amounts in the format:
+        // res.status(201).json({
+        //     success: true,
+        //     user: userData,
+        //     token: token,
+        //     verification: {
+        //         verified: false,
+        //         amount1: amount1,
+        //         amount2: amount2,
+        //         cryptoAmounts: {
+        //             BTC: { amount1: amount1BTC, amount2: amount2BTC },
+        //             ETH: { amount1: amount1ETH, amount2: amount2ETH },
+        //             LTC: { amount1: amount1LTC, amount2: amount2LTC },
+        //             SOL: { amount1: amount1SOL, amount2: amount2SOL }
+        //         },
+        //         // timeLeft: null,
+        //         // chain: null,
+        //         // address: null
+        //     },
+        //     message: 'Account created successfully'
+        // });       
+
         return {
-            LTC: {
-                amount1: Number((0.0075 * (1 + a1)).toPrecision(4)),
-                amount2: Number((0.0075 * (1 + a2)).toPrecision(4)),
-            },
-            BTC: {
-                amount1: Number((0.000075 * (1 + a1)).toPrecision(4)),
-                amount2: Number((0.000075 * (1 + a2)).toPrecision(4)),
-            },
-            ETH: {
-                amount1: Number((0.000018 * (1 + a1)).toPrecision(4)),
-                amount2: Number((0.000018 * (1 + a2)).toPrecision(4)),
-            },
-            SOL: {
-                amount1: Number((0.0024 * (1 + a1)).toPrecision(4)),
-                amount2: Number((0.0024 * (1 + a2)).toPrecision(4)),
-            },
+            BTC: { amount1: verification.cryptoAmounts.BTC.amount1, amount2: verification.cryptoAmounts.BTC.amount2 },
+            LTC: { amount1: verification.cryptoAmounts.LTC.amount1, amount2: verification.cryptoAmounts.LTC.amount2 },
+            ETH: { amount1: verification.cryptoAmounts.ETH.amount1, amount2: verification.cryptoAmounts.ETH.amount2 },
+            SOL: { amount1: verification.cryptoAmounts.SOL.amount1, amount2: verification.cryptoAmounts.SOL.amount2 },
         };
+
     });
 
     const currentRecipient = useMemo(() => recipientAddresses[currency], [currency]);
@@ -154,14 +179,15 @@ export default function VerifyAccount() {
                 email: email,
                 amount1: amount1,
                 amount2: amount2,
-                timeLeft: timeLeft,
+                timeLeft: 10 * 1000 * 60 - Math.abs(new Date().getTime() - time), // in milliseconds 
                 chain: currency,
                 address: userWalletAddress,
+                transactionId: transactionId,
                 urlParams: params,
             });
 
             setStatusMsg('Verification process completed.');
-            console.log('Verification response:', res);
+            console.log('Verification response:', response);
         } catch (error) {
             console.error('Error during verification:', error);
             setStatusMsg('Verification failed. Please try again.');
@@ -226,6 +252,17 @@ export default function VerifyAccount() {
                     />
                 </div>
 
+                  <div style={{ marginBottom: 15 }}>
+                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: 5, color: '#fff' }}>Transaction ID/Hash</label>
+                    <input
+                        type="text"
+                        value={transactionId}
+                        onChange={(e) => setTransactionId(e.target.value)}
+                        placeholder="Enter your transaction ID or hash"
+                        style={{ width: '100%', padding: 10, borderRadius: 4 }}
+                    />
+                </div>
+
                 <div style={{ marginBottom: 15 }}>
                     <label style={{ display: 'block', fontWeight: 'bold', marginBottom: 5, color: '#fff' }}>Select Asset</label>
                     <select
@@ -245,12 +282,12 @@ export default function VerifyAccount() {
                         <canvas ref={timerCanvasRef} width={120} height={120} />
                     </div>
 
-                    <p style={{ color: '#ccc' }}>Send exactly the amount below within 10 minutes:</p>
+                    <p style={{ color: '#ccc' }}>Pick one of the 2 quantities below and send exactly that amount within 10 minutes:</p>
                     <div style={{ fontSize: '1.2em', fontWeight: 'bold', color: '#e9bc27', margin: '10px 0' }}>
-                        {amount1} {currency}
+                        {amount1} {currency} = {(verification.amount1)} $USD
                     </div>
                     <div style={{ fontSize: '1.2em', fontWeight: 'bold', color: '#54d334', margin: '10px 0' }}>
-                        {amount2} {currency}
+                        {amount2} {currency} = {(verification.amount2)} $USD
                     </div>
 
                     <div style={{ display: 'inline-block', margin: '15px 0', padding: 10, background: 'white', border: '1px solid #eee' }}>
@@ -265,8 +302,11 @@ export default function VerifyAccount() {
                 </div>
 
                 <div style={{ marginTop: 15, display: 'flex', justifyContent: 'center' }}>
-                    <button onClick={handleSubmit} style={{ padding: 10, borderRadius: 4 }}>Done</button>
+                    <button onClick={handleSubmit} style={{ padding: 10, borderRadius: 4 }}>DONE</button>
+                    {/* note: plz wait 30 second after send before clcik done to maximze probably of thing going smoothly */}
+                    
                 </div>
+                <p>Please wait 30 seconds after sending before clicking DONE to maximize the probability of things going smoothly.</p>
             </div>
             <Dialog open={infoOpen} onClose={() => setInfoOpen(false)} maxWidth="sm" fullWidth >
                 <div style={{ backgroundColor: '#0a0a0a' }}>
@@ -274,7 +314,7 @@ export default function VerifyAccount() {
                     <DialogContent >
                         {/* a note to the user telling why they need to send the exact amount to the address below within 10 minutes */}
                         <p style={{ marginTop: 8 }}>
-                            To main the quality of the site we need to verify that you are a real user as there has be problems with spam bots and abuse in the past. We ask for a small verification payment less than 0.10$ USD.
+                            To main the quality of the site we need to verify that you are a real user as there has be problems with spam bots and abuse in the past. We ask for a small verification payment less than 0.20$ USD, this cost will be refunded / recompensated later.
                         </p>
                         <p>
                             To verify your account and be able to use all features, please send the exact amounts shown below to the address provided within 10 minutes. This helps us confirm that your a real person and reduces abuse of the system.
